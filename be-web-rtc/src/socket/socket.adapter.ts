@@ -29,6 +29,7 @@ const createTokenMiddleware =
       const payload = jwtService.verify(token, {
         secret: process.env.JSON_TOKEN_KEY,
       });
+
       socket.user_id = payload.id;
       socket.username = payload.username;
       next();

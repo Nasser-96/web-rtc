@@ -14,6 +14,11 @@ const useUserStore = create<UserStoreType>((set) => ({
   },
   setUserData(userData: LocalStorageUserDataType) {
     set((state) => {
+      if (typeof window !== "undefined") {
+        console.log(userData?.token);
+
+        localStorage.setItem("token", userData?.token);
+      }
       return { ...state, userData };
     });
   },
