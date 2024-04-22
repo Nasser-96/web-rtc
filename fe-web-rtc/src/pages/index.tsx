@@ -1,4 +1,3 @@
-import { ConstrainsAudioVideoType } from "@/types&enums/types";
 import useNewSocket from "../socket/new-socket";
 import { useEffect, useState } from "react";
 import useWindowIsLoaded from "@/hooks/useIsWindowLoaded";
@@ -8,10 +7,12 @@ export default function Home() {
   const { isWindow } = useWindowIsLoaded();
   const [stream, setStream] = useState<MediaStream>();
 
-  const shareMiceAndVideo = async (constrains: ConstrainsAudioVideoType) => {
+  const shareMiceAndVideo = async (constrains: MediaStreamConstraints) => {
     if (isWindow) {
       try {
-        const data = await navigator.mediaDevices.getUserMedia(constrains);
+        const data: MediaStream = await navigator.mediaDevices.getUserMedia(
+          constrains
+        );
         setStream(data);
       } catch (error) {
         console.log(error);

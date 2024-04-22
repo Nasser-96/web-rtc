@@ -28,8 +28,3 @@ export type LocalStorageUserDataType = {
   token?: string;
   username?: string;
 };
-
-export type ConstrainsAudioVideoType = {
-  audio: boolean;
-  video: boolean;
-};
