@@ -27,8 +27,6 @@ const useNewSocket = (url: string = "") => {
 
   useEffect(() => {
     const failedConnection = (data: any) => {
-      console.log(data);
-
       if (data && data.message && data.message === "Invalid token") {
         router.push("login");
       }

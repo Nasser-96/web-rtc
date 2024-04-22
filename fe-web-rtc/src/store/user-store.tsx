@@ -8,16 +8,19 @@ export type UserStoreType = {
 
 const useUserStore = create<UserStoreType>((set) => ({
   userData: {
-    token: typeof window !== "undefined" ? localStorage.getItem("token") : "",
+    token:
+      typeof window !== "undefined"
+        ? (localStorage.getItem("token") as string)
+        : "",
     username:
-      typeof window !== "undefined" ? localStorage.getItem("username") : "",
+      typeof window !== "undefined"
+        ? (localStorage.getItem("username") as string)
+        : "",
   },
   setUserData(userData: LocalStorageUserDataType) {
     set((state) => {
       if (typeof window !== "undefined") {
-        console.log(userData?.token);
-
-        localStorage.setItem("token", userData?.token);
+        localStorage.setItem("token", userData.token as string);
       }
       return { ...state, userData };
     });
