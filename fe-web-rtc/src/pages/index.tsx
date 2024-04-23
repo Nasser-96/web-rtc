@@ -1,11 +1,12 @@
 import useNewSocket from "../socket/new-socket";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import useWindowIsLoaded from "@/hooks/useIsWindowLoaded";
 
 export default function Home() {
   const { socket } = useNewSocket();
   const { isWindow } = useWindowIsLoaded();
-  const [stream, setStream] = useState<MediaStream>();
+  const myVideoRef = useRef<HTMLVideoElement>(null);
+  const [stream, setStream] = useState<MediaStream | null>();
 
   const shareMiceAndVideo = async (constrains: MediaStreamConstraints) => {
     if (isWindow) {
@@ -20,24 +21,40 @@ export default function Home() {
     }
   };
 
+  const showVideo = () => {
+    if (myVideoRef.current && stream) {
+      myVideoRef.current.srcObject = stream;
+    }
+  };
+
+  const stopVideo = () => {
+    if (myVideoRef.current && stream) {
+      const tracks = stream.getTracks();
+      tracks?.forEach((track) => {
+        track.stop();
+      });
+      myVideoRef.current.srcObject = null;
+    }
+  };
+
   return (
     <div className="flex items-center justify-center">
-      <main className="container flex justify-between gap-10">
+      <main className="container flex justify-between items-center gap-10">
         <div className="flex flex-col gap-3 w-full">
           <button
-            onClick={() => shareMiceAndVideo({ audio: true, video: true })}
+            onClick={() => shareMiceAndVideo({ audio: false, video: true })}
             className="border rounded-xl p-2 text-white mt-3"
           >
             Share my mic and camera
           </button>
           <button
-            // onClick={SendMessageToServer}
+            onClick={showVideo}
             className="border rounded-xl p-2 text-white mt-3"
           >
             Show My Video
           </button>
           <button
-            // onClick={SendMessageToServer}
+            onClick={stopVideo}
             className="border rounded-xl p-2 text-white mt-3"
           >
             Stop My Video
@@ -115,6 +132,7 @@ export default function Home() {
             className="w-full h-[40vh] bg-slate-800 rounded-md"
             autoPlay
             playsInline
+            ref={myVideoRef}
           />
           <h1 className="font-bold text-white text-3xl">Their feed</h1>
           <video
