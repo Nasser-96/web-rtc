@@ -6,7 +6,12 @@ export default function Home() {
   const { socket } = useNewSocket();
   const { isWindow } = useWindowIsLoaded();
   const myVideoRef = useRef<HTMLVideoElement>(null);
+  const theirVideoRef = useRef<HTMLVideoElement>(null);
   const [stream, setStream] = useState<MediaStream | null>();
+  const [mediaWidth, setMediaWidth] = useState<number>(0);
+  const [mediaHeight, setMediaHeight] = useState<number>(0);
+  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder>();
+  const [videoRecorded, setVideoRecorded] = useState<Blob[]>([]);
 
   const shareMiceAndVideo = async (constrains: MediaStreamConstraints) => {
     if (isWindow) {
@@ -37,12 +42,60 @@ export default function Home() {
     }
   };
 
+  const changeVideoSize = () => {
+    if (stream) {
+      stream.getVideoTracks().forEach((track) => {
+        const videoConstraints: MediaTrackConstraints = {
+          height: mediaHeight,
+          width: mediaWidth,
+          // frameRate: 1000,
+          // aspectRatio:10
+        };
+        track.applyConstraints(videoConstraints);
+      });
+    }
+  };
+
+  const startRecording = async () => {
+    if (stream) {
+      const tempMediaRecorder = new MediaRecorder(stream);
+      setMediaRecorder(tempMediaRecorder);
+
+      const tempBlob = [...videoRecorded];
+      tempMediaRecorder.ondataavailable = (e) => {
+        tempBlob.push(e.data);
+      };
+      setVideoRecorded(tempBlob);
+      tempMediaRecorder.start();
+    }
+  };
+  const stopRecording = () => {
+    mediaRecorder?.stop();
+  };
+  const playRecording = () => {
+    if (isWindow && theirVideoRef.current) {
+      const superBuffer = new Blob(videoRecorded);
+
+      theirVideoRef.current.src = window.URL.createObjectURL(superBuffer);
+      theirVideoRef.current.controls = true;
+      theirVideoRef.current.play();
+    }
+  };
+
   return (
     <div className="flex items-center justify-center">
       <main className="container flex justify-between items-center gap-10">
         <div className="flex flex-col gap-3 w-full">
           <button
-            onClick={() => shareMiceAndVideo({ audio: false, video: true })}
+            onClick={() =>
+              shareMiceAndVideo({
+                audio: {
+                  echoCancellation: true,
+                  noiseSuppression: true,
+                },
+                video: true,
+              })
+            }
             className="border rounded-xl p-2 text-white mt-3"
           >
             Share my mic and camera
@@ -61,33 +114,31 @@ export default function Home() {
           </button>
           <div className="flex gap-3">
             <button
-              // onClick={SendMessageToServer}
+              onClick={changeVideoSize}
               className="border rounded-xl p-2 w-full text-white mt-3"
             >
               Change screen size
             </button>
             <input
-              type="text"
+              type="number"
               className="w-full px-4 rounded-lg"
-              // value={messageClient}
-              // onChange={(e) => setMessage(e.target.value)}
+              onChange={(e) => setMediaWidth(parseInt(e.target.value))}
             />
             <input
               type="text"
               className="w-full px-4 rounded-lg"
-              // value={messageClient}
-              // onChange={(e) => setMessage(e.target.value)}
+              onChange={(e) => setMediaHeight(parseInt(e.target.value))}
             />
           </div>
           <div className="flex gap-3">
             <button
-              // onClick={SendMessageToServer}
+              onClick={startRecording}
               className="border rounded-xl p-2 w-full text-white mt-3"
             >
               Start recording
             </button>
             <button
-              // onClick={SendMessageToServer}
+              onClick={stopRecording}
               className="border rounded-xl p-2 w-full text-white mt-3"
             >
               Stop recording
@@ -95,7 +146,7 @@ export default function Home() {
           </div>
           <div className="flex gap-3">
             <button
-              // onClick={SendMessageToServer}
+              onClick={playRecording}
               className="border rounded-xl p-2 w-full text-white mt-3"
             >
               Play recording
@@ -129,7 +180,7 @@ export default function Home() {
         <div className="w-full flex flex-col gap-4">
           <h1 className="font-bold text-white text-3xl">My feed</h1>
           <video
-            className="w-full h-[40vh] bg-slate-800 rounded-md"
+            className="w-full h-fit bg-slate-800 rounded-md"
             autoPlay
             playsInline
             ref={myVideoRef}
@@ -139,6 +190,7 @@ export default function Home() {
             className="w-full h-[40vh] bg-slate-800 rounded-md"
             autoPlay
             playsInline
+            ref={theirVideoRef}
           />
         </div>
       </main>
