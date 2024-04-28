@@ -4,9 +4,16 @@ import { BadRequestException, ValidationPipe } from '@nestjs/common';
 import ReturnResponse from './helper/returnResponse';
 import { ValidationError } from 'class-validator';
 import { SocketIOAdapter } from './socket/socket.adapter';
+import * as fs from 'fs';
+import { HttpsOptions } from '@nestjs/common/interfaces/external/https-options.interface';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const httpsOptions: HttpsOptions = {
+    key: fs.readFileSync('key.pem'),
+    cert: fs.readFileSync('cert.pem'),
+    passphrase: 'nasser',
+  };
+  const app = await NestFactory.create(AppModule, { httpsOptions });
 
   app.enableCors();
   app.useGlobalPipes(

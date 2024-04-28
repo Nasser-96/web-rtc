@@ -13,7 +13,7 @@ export const makeRequest = async (req: MakeRequest) => {
   const { url, method, data } = req;
 
   return axiosObject({
-    url: "http://localhost:9000/" + url,
+    url: "https://localhost:9000/" + url,
     method,
     data,
   }).then((res) => {

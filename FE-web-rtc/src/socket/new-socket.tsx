@@ -16,7 +16,7 @@ const useNewSocket = (url: string = "") => {
 
   useEffect(() => {
     setSocket(
-      io(`ws://localhost:9000/${url}`, {
+      io(`wss://localhost:9000/${url}`, {
         auth: { token: userData.token },
         reconnection: true,
         autoConnect: true,

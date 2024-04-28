@@ -13,8 +13,6 @@ export class AuthController {
 
   @Post('/login')
   signin(@Body() body: Login) {
-    console.log(body);
-
     return this.authService?.login(body);
   }
 

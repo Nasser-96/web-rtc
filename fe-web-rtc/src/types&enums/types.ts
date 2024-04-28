@@ -28,3 +28,12 @@ export type LocalStorageUserDataType = {
   token?: string;
   username?: string;
 };
+
+export type OfferType = {
+  offererUserName: string;
+  offer: RTCSessionDescriptionInit;
+  offerIceCandidates: RTCIceCandidate[];
+  answererUserName: string;
+  answer: any;
+  answererIceCandidates: RTCIceCandidate[];
+};

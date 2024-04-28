@@ -35,7 +35,7 @@ export class AuthService {
     if (userExists) {
       throw new ConflictException(
         ReturnResponse({}, [
-          { field: 'email', error: 'Username Already Exists' },
+          { field: 'username', error: 'Username Already Exists' },
         ]),
       );
     }

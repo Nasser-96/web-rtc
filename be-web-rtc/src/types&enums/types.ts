@@ -6,3 +6,18 @@ export type AuthPayloadType = {
 };
 
 export type SocketWithAuth = Socket & AuthPayloadType;
+
+export type OfferType = {
+  offererUserName: string;
+  offer: RTCSessionDescriptionInit;
+  offerIceCandidates: RTCIceCandidate[];
+  answererUserName: string;
+  answer: any;
+  answererIceCandidates: RTCIceCandidate[];
+};
+
+export type IceCandidateType = {
+  iceCandidate: RTCIceCandidate;
+  iceUserName: string;
+  didIOffer: boolean;
+};
