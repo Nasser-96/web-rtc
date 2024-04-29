@@ -21,6 +21,7 @@ export class AppGateway
 {
   private readonly logger = new Logger(AppGateway.name);
   private offers: OfferType[] = [];
+  private connectedSockets: SocketWithAuth[] = [];
   constructor() {}
 
   @WebSocketServer() server: Server;
@@ -30,6 +31,7 @@ export class AppGateway
   }
 
   async handleConnection(client: SocketWithAuth) {
+    this.connectedSockets.push(client);
     if (this.offers.length) {
       setTimeout(() => {
         this.server.emit('availableOffers', this.offers);
@@ -41,6 +43,9 @@ export class AppGateway
   async handleDisconnect(client: SocketWithAuth) {
     this.offers = this.offers.filter(
       (offer) => offer.offererUserName !== client.username,
+    );
+    this.connectedSockets = this.connectedSockets.filter(
+      (s) => s.username !== client.username,
     );
     this.logger.log(`Disconnected socket id: ${client.username}`);
   }
@@ -73,5 +78,33 @@ export class AppGateway
         offerInOffers.offerIceCandidates.push(iceCandidate);
       }
     }
+  }
+
+  @SubscribeMessage('newAnswer')
+  handleAnswerOffer(client: SocketWithAuth, answerOffer: OfferType) {
+    const socketToAnswer = this.connectedSockets.find((socket) => {
+      return socket.username === answerOffer.offererUserName;
+    });
+    if (!socketToAnswer) {
+      console.log('No Matching Socket');
+      return;
+    }
+
+    const socketIdToAnswer = socketToAnswer.id;
+    const offerToUpdate = this.offers.find((offer) => {
+      return offer.offererUserName === answerOffer.offererUserName;
+    });
+
+    if (!offerToUpdate) {
+      console.log('No Offer To Update');
+      return;
+    }
+
+    offerToUpdate.answer = answerOffer.answer;
+    offerToUpdate.answererUserName = client.username;
+
+    // socket has a .to() which allow to emitting to a 'room'
+    // every socket has it's own room
+    this.server.to(socketIdToAnswer).emit('answerResponse', offerToUpdate);
   }
 }

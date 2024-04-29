@@ -42,12 +42,12 @@ export default function Call() {
     }
   };
 
-  const createPeerConnection = (
+  const createPeerConnection = async (
     newStream: MediaStream,
     didIOfferFun?: boolean,
     offerObj?: OfferType
   ): Promise<RTCPeerConnection> => {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
       const newPeer = new RTCPeerConnection(peerConfig);
       newStream.getTracks().forEach((track) => {
         newPeer.addTrack(track, newStream);
@@ -55,6 +55,9 @@ export default function Call() {
       setPeerConnection(newPeer);
       console.log("didIOffer", didIOfferFun);
 
+      newPeer.addEventListener("iceconnectionstatechange", (event) => {
+        console.log(event);
+      });
       newPeer.addEventListener("icecandidate", (e) => {
         console.log("____Ice candidate found____");
         console.log(e);
@@ -68,7 +71,7 @@ export default function Call() {
         }
       });
       if (offerObj) {
-        newPeer.setRemoteDescription(offerObj.offer);
+        await newPeer.setRemoteDescription(offerObj.offer);
       }
       resolve(newPeer);
     });
@@ -87,8 +90,11 @@ export default function Call() {
         offer
       );
       const answer = await peerConnection.createAnswer();
-      peerConnection.setLocalDescription(answer);
+      // add the answer to the offer so the server knows which offer this is related to
+      offer.answer = answer;
+      await peerConnection.setLocalDescription(answer);
       console.log(answer);
+      socket?.emit("newAnswer", offer);
     } catch (error) {
       console.log(error);
     }
@@ -120,12 +126,18 @@ export default function Call() {
     socket?.on("newOfferAwaiting", (offer: OfferType[]) => {
       createOfferEls(offer);
     });
+    socket?.on("answerResponse", (offer: OfferType) => {
+      console.log("OFFER", offer);
+    });
     return () => {
       socket?.off("newOfferAwaiting", (offer: OfferType[]) => {
         createOfferEls(offer);
       });
       socket?.off("availableOffers", (offer: OfferType[]) => {
         createOfferEls(offer);
+      });
+      socket?.off("answerResponse", (offer: OfferType) => {
+        console.log("OFFER", offer);
       });
     };
   }, [socket]);
