@@ -26,23 +26,16 @@ export default function Call() {
   const call = async () => {
     if (isWindow) {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: true,
-          audio: false,
-        });
-        if (localVideoRef.current) {
-          localVideoRef.current.srcObject = stream;
-          setLocalStream(stream);
-          const connection: RTCPeerConnection = await createPeerConnection(
-            stream,
-            true
-          );
-          const offer = await connection.createOffer();
-          console.log(offer);
-          connection.setLocalDescription(offer);
-          setDidIOffer(true);
-          socket?.emit("newOffer", offer);
-        }
+        const UserMedia: MediaStream = await fetchUserMedia();
+        const connection: RTCPeerConnection = await createPeerConnection(
+          UserMedia,
+          true
+        );
+        const offer = await connection.createOffer();
+        console.log(offer);
+        connection.setLocalDescription(offer);
+        setDidIOffer(true);
+        socket?.emit("newOffer", offer);
       } catch (error) {
         console.log(error);
       }
@@ -51,7 +44,8 @@ export default function Call() {
 
   const createPeerConnection = (
     newStream: MediaStream,
-    didIOfferFun?: boolean
+    didIOfferFun?: boolean,
+    offerObj?: OfferType
   ): Promise<RTCPeerConnection> => {
     return new Promise((resolve, reject) => {
       const newPeer = new RTCPeerConnection(peerConfig);
@@ -73,6 +67,9 @@ export default function Call() {
           });
         }
       });
+      if (offerObj) {
+        newPeer.setRemoteDescription(offerObj.offer);
+      }
       resolve(newPeer);
     });
   };
@@ -81,8 +78,39 @@ export default function Call() {
     setOffersList(offer);
   };
 
-  const answerOffer = (offer: OfferType) => {
-    console.log(offer);
+  const answerOffer = async (offer: OfferType) => {
+    try {
+      const UserMedia: MediaStream = await fetchUserMedia();
+      const peerConnection = await createPeerConnection(
+        UserMedia,
+        false,
+        offer
+      );
+      const answer = await peerConnection.createAnswer();
+      peerConnection.setLocalDescription(answer);
+      console.log(answer);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const fetchUserMedia = async (): Promise<MediaStream> => {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: false,
+        });
+        if (localVideoRef.current) {
+          localVideoRef.current.srcObject = stream;
+          setLocalStream(stream);
+        }
+        resolve(stream);
+      } catch (error) {
+        console.log(error);
+        reject(error);
+      }
+    });
   };
 
   useEffect(() => {
