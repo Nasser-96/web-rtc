@@ -77,24 +77,28 @@ export default function Call() {
     });
   };
 
-  const createOfferEls = (offer: OfferType[]) => {
-    setOffersList(offer);
-  };
-
   const answerOffer = async (offer: OfferType) => {
     try {
       const UserMedia: MediaStream = await fetchUserMedia();
-      const peerConnection = await createPeerConnection(
+      const answerPeerConnection = await createPeerConnection(
         UserMedia,
         false,
         offer
       );
-      const answer = await peerConnection.createAnswer();
+      const answer = await answerPeerConnection.createAnswer();
       // add the answer to the offer so the server knows which offer this is related to
       offer.answer = answer;
-      await peerConnection.setLocalDescription(answer);
+      await answerPeerConnection.setLocalDescription(answer);
       console.log(answer);
-      socket?.emit("newAnswer", offer);
+      const offerIceCandidates: RTCIceCandidate[] = await socket?.emitWithAck(
+        "newAnswer",
+        offer
+      );
+      offerIceCandidates.forEach((candidate) => {
+        answerPeerConnection.addIceCandidate(candidate);
+        console.log("=======Added Ice Candidate=======");
+      });
+      console.log(offerIceCandidates);
     } catch (error) {
       console.log(error);
     }
@@ -119,7 +123,21 @@ export default function Call() {
     });
   };
 
+  const createOfferEls = (offer: OfferType[]) => {
+    setOffersList(offer);
+  };
+
+  const addAnswer = async (offer: OfferType) => {
+    if (peerConnection) {
+      await peerConnection?.setRemoteDescription(offer.answer);
+      console.log(peerConnection.signalingState);
+    }
+  };
   useEffect(() => {
+    socket?.off("availableOffers");
+    socket?.off("newOfferAwaiting");
+    socket?.off("answerResponse");
+
     socket?.on("availableOffers", (offer: OfferType[]) => {
       createOfferEls(offer);
     });
@@ -127,7 +145,7 @@ export default function Call() {
       createOfferEls(offer);
     });
     socket?.on("answerResponse", (offer: OfferType) => {
-      console.log("OFFER", offer);
+      addAnswer(offer);
     });
     return () => {
       socket?.off("newOfferAwaiting", (offer: OfferType[]) => {
@@ -137,10 +155,12 @@ export default function Call() {
         createOfferEls(offer);
       });
       socket?.off("answerResponse", (offer: OfferType) => {
-        console.log("OFFER", offer);
+        addAnswer(offer);
       });
     };
-  }, [socket]);
+  }, [socket, peerConnection]);
+
+  console.log(peerConnection); // it exist here
 
   return (
     <div className="flex items-center justify-center">

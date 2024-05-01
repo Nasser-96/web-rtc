@@ -106,5 +106,8 @@ export class AppGateway
     // socket has a .to() which allow to emitting to a 'room'
     // every socket has it's own room
     this.server.to(socketIdToAnswer).emit('answerResponse', offerToUpdate);
+    if (offerToUpdate.offerIceCandidates) {
+      return offerToUpdate.offerIceCandidates;
+    }
   }
 }
