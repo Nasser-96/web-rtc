@@ -2,7 +2,7 @@ import "@/styles/globals.css";
 import type { AppProps } from "next/app";
 import { useRouter as useNavigator } from "next/navigation";
 import { useEffect } from "react";
-import useUserStore from "../store/user-store";
+import useUserStore from "../stores/user-store";
 import { useRouter } from "next/router";
 
 export default function App({ Component, pageProps }: AppProps) {

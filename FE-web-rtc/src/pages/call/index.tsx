@@ -1,7 +1,7 @@
 import useNewSocket from "@/socket/new-socket";
 import { FormEvent, useEffect, useRef, useState } from "react";
 import useWindowIsLoaded from "@/hooks/useIsWindowLoaded";
-import useUserStore from "@/store/user-store";
+import useUserStore from "@/stores/user-store";
 import { OfferType } from "@/types&enums/types";
 
 export default function Call() {
@@ -49,6 +49,12 @@ export default function Call() {
   ): Promise<RTCPeerConnection> => {
     return new Promise(async (resolve, reject) => {
       const newPeer = new RTCPeerConnection(peerConfig);
+      const theRemoteStream = new MediaStream();
+      setRemoteStream(theRemoteStream);
+
+      if (remoteVideoRef.current) {
+        remoteVideoRef.current.srcObject = theRemoteStream;
+      }
       newStream.getTracks().forEach((track) => {
         newPeer.addTrack(track, newStream);
       });
@@ -58,6 +64,7 @@ export default function Call() {
       newPeer.addEventListener("iceconnectionstatechange", (event) => {
         console.log(event);
       });
+
       newPeer.addEventListener("icecandidate", (e) => {
         console.log("____Ice candidate found____");
         console.log(e);
@@ -69,6 +76,15 @@ export default function Call() {
             didIOffer: didIOfferFun,
           });
         }
+      });
+
+      newPeer.addEventListener("track", (event) => {
+        console.log("Got the track from other peer");
+        console.log(event);
+        event.streams[0].getTracks().forEach((track) => {
+          theRemoteStream.addTrack(track);
+          console.log("FINALLLY");
+        });
       });
       if (offerObj) {
         await newPeer.setRemoteDescription(offerObj.offer);
@@ -104,12 +120,12 @@ export default function Call() {
     }
   };
 
-  const fetchUserMedia = async (): Promise<MediaStream> => {
+  const fetchUserMedia = async (isAudio = false): Promise<MediaStream> => {
     return new Promise(async (resolve, reject) => {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
           video: true,
-          audio: false,
+          audio: isAudio,
         });
         if (localVideoRef.current) {
           localVideoRef.current.srcObject = stream;
@@ -133,11 +149,20 @@ export default function Call() {
       console.log(peerConnection.signalingState);
     }
   };
+  const addNewIceCandidate = (iceCandidate: RTCIceCandidate) => {
+    peerConnection?.addIceCandidate(iceCandidate);
+    console.log("=======Added Ice Candidate=======");
+  };
+
   useEffect(() => {
     socket?.off("availableOffers");
     socket?.off("newOfferAwaiting");
     socket?.off("answerResponse");
+    socket?.off("receivedIceCandidateFromServer");
 
+    socket?.on("test", (data) => {
+      console.log(data);
+    });
     socket?.on("availableOffers", (offer: OfferType[]) => {
       createOfferEls(offer);
     });
@@ -147,6 +172,12 @@ export default function Call() {
     socket?.on("answerResponse", (offer: OfferType) => {
       addAnswer(offer);
     });
+    socket?.on(
+      "receivedIceCandidateFromServer",
+      (iceCandidate: RTCIceCandidate) => {
+        addNewIceCandidate(iceCandidate);
+      }
+    );
     return () => {
       socket?.off("newOfferAwaiting", (offer: OfferType[]) => {
         createOfferEls(offer);
@@ -157,15 +188,24 @@ export default function Call() {
       socket?.off("answerResponse", (offer: OfferType) => {
         addAnswer(offer);
       });
+      socket?.off(
+        "receivedIceCandidateFromServer",
+        (iceCandidate: RTCIceCandidate) => {
+          addNewIceCandidate(iceCandidate);
+        }
+      );
     };
   }, [socket, peerConnection]);
-
-  console.log(peerConnection); // it exist here
 
   return (
     <div className="flex items-center justify-center">
       <div className="container">
-        <div className="flex gap-2">
+        {isWindow && (
+          <p className="text-white my-5 text-2xl">
+            User name: {userData.username}
+          </p>
+        )}
+        <div className="lg:flex gap-2">
           <button
             onClick={call}
             className="border rounded-xl py-2 px-10 text-white bg-blue-800 mt-3"
@@ -187,7 +227,7 @@ export default function Call() {
             );
           })}
         </div>
-        <div className="flex gap-2 justify-center mt-2">
+        <div className="lg:flex-row flex flex-col gap-2 justify-center mt-2">
           <video
             className="w-full bg-slate-800 rounded-md"
             autoPlay

@@ -8,7 +8,6 @@ import {
   SubscribeMessage,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import ReturnResponse, { ReturnResponseType } from '../helper/returnResponse';
 import {
   IceCandidateType,
   OfferType,
@@ -50,6 +49,10 @@ export class AppGateway
     this.logger.log(`Disconnected socket id: ${client.username}`);
   }
 
+  emitToAll(eventName: string, eventData: any) {
+    this.server.emit(eventName, eventData);
+  }
+
   @SubscribeMessage('newOffer')
   async handleNewOffer(
     client: SocketWithAuth,
@@ -76,6 +79,34 @@ export class AppGateway
       });
       if (offerInOffers) {
         offerInOffers.offerIceCandidates.push(iceCandidate);
+        if (offerInOffers.answererUserName) {
+          const socketToSendTo = this.connectedSockets.find(
+            (s) => s.username === offerInOffers.answererUserName,
+          );
+          if (socketToSendTo) {
+            socketToSendTo
+              .to(socketToSendTo.id)
+              .emit('receivedIceCandidateFromServer', iceCandidate);
+          } else {
+            console.log('Ice Candidate received but could not find answerer');
+          }
+        }
+      }
+    } else {
+      const offerInOffers = this.offers.find((o) => {
+        return o.answererUserName === iceUserName;
+      });
+      const socketToSendTo = this.connectedSockets.find(
+        (s) => s.username === offerInOffers.offererUserName,
+      );
+      if (socketToSendTo) {
+        console.log(socketToSendTo.id);
+
+        this.server
+          .to(socketToSendTo.id)
+          .emit('receivedIceCandidateFromServer', iceCandidate);
+      } else {
+        console.log('Ice Candidate received but could not find answerer');
       }
     }
   }
@@ -105,6 +136,8 @@ export class AppGateway
 
     // socket has a .to() which allow to emitting to a 'room'
     // every socket has it's own room
+    console.log(socketIdToAnswer);
+
     this.server.to(socketIdToAnswer).emit('answerResponse', offerToUpdate);
     if (offerToUpdate.offerIceCandidates) {
       return offerToUpdate.offerIceCandidates;

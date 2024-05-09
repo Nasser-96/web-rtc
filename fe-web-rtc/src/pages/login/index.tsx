@@ -1,8 +1,8 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { ReturnResponseType } from "../../types&enums/enums";
-import { loginService } from "../../model/login";
-import useUserStore from "../../store/user-store";
+import { loginService } from "../../model/services";
+import useUserStore from "../../stores/user-store";
 import useNewSocket from "../../socket/new-socket";
 
 export default function Login() {
@@ -16,7 +16,7 @@ export default function Login() {
       const data: ReturnResponseType<{ user_token: string }> =
         await loginService({ username, password });
       setUserData({ token: data?.response?.user_token, username });
-      router.push("/call");
+      router.push("/join-video");
     } catch (error) {
       console.log(error);
     }

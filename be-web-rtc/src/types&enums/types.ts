@@ -21,3 +21,7 @@ export type IceCandidateType = {
   iceUserName: string;
   didIOffer: boolean;
 };
+
+export type ValidateLinkType = {
+  token: string;
+};

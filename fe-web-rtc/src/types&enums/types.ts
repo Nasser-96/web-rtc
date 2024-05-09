@@ -37,3 +37,18 @@ export type OfferType = {
   answer: any;
   answererIceCandidates: RTCIceCandidate[];
 };
+
+export type GetValidateDataTokenType = {
+  professionalFullName: string;
+  appointmentDate: number;
+};
+
+export type VideoCallDataStoreType = {
+  current: string;
+  video: boolean;
+  audio: boolean;
+  audioDevice: string;
+  videoDevice: string;
+  shareScreen: boolean;
+  haveMedia: boolean;
+};
