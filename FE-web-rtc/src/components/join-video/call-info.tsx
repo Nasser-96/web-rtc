@@ -7,8 +7,6 @@ interface CallInfoProps {
 }
 
 export default function CallInfo({ appointmentData }: CallInfoProps) {
-  console.log();
-
   const [momentText, setMomentText] = useState(
     moment(appointmentData.appointmentDate).fromNow()
   );

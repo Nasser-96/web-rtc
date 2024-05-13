@@ -17,7 +17,7 @@ export default function App({ Component, pageProps }: AppProps) {
   }, [userData]);
   return (
     <main className={`min-h-screen bg-slate-900`}>
-      <Component {...pageProps} />;
+      <Component {...pageProps} />
     </main>
   );
 }

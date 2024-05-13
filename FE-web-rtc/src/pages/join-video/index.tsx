@@ -1,12 +1,15 @@
 import useWindowIsLoaded from "@/hooks/useIsWindowLoaded";
 import { getDecodeTokenService } from "@/model/services";
-import { ReturnResponseType } from "@/types&enums/enums";
-import { GetValidateDataTokenType } from "@/types&enums/types";
+import {
+  GetValidateDataTokenType,
+  ReturnResponseType,
+} from "@/types&enums/types";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import CallInfo from "./call-info";
-import ChatWindow from "./chat-window";
+import CallInfo from "../../components/join-video/call-info";
+import ChatWindow from "../../components/join-video/chat-window";
 import useVideoStore from "@/stores/video-call-store";
+import ActionButtons from "@/components/join-video/action-buttons";
 
 export default function VideoStream() {
   const searchParams = useSearchParams();
@@ -16,7 +19,7 @@ export default function VideoStream() {
   const [appointmentData, setAppointmentData] =
     useState<GetValidateDataTokenType>();
   const token = searchParams.get("token");
-  const { videoData, setVideoData } = useVideoStore();
+  const { callState, setCallState } = useVideoStore();
 
   const fetchDecodedToken = async () => {
     if (token) {
@@ -60,7 +63,10 @@ export default function VideoStream() {
         ) : (
           <></>
         )}
-        <ChatWindow />
+        {/* <ChatWindow /> */}
+        <div className="absolute bottom-0 w-full bg-gray-800 px-4">
+          <ActionButtons />
+        </div>
       </div>
     </div>
   );

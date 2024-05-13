@@ -12,6 +12,13 @@ export type NameSpaces = {
   rooms: RoomsForNameSpaces[];
 };
 
+export type ReturnResponseType<T> = {
+  is_successful: boolean;
+  error_msg: string;
+  success: string;
+  response: T;
+};
+
 export type RoomsForNameSpaces = {
   namespaceId: number;
   privateRoom: boolean;

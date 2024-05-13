@@ -2,12 +2,12 @@ import { VideoCallDataStoreType } from "@/types&enums/types";
 import { create } from "zustand";
 
 export type UserStoreType = {
-  videoData: VideoCallDataStoreType;
-  setVideoData: (data: VideoCallDataStoreType) => void;
+  callState: VideoCallDataStoreType;
+  setCallState: (data: VideoCallDataStoreType) => void;
 };
 
-const useVideoStore = create<UserStoreType>((set) => ({
-  videoData: {
+const useCallStore = create<UserStoreType>((set) => ({
+  callState: {
     current: "idle", // negotiating, progress, complete
     video: false,
     audio: false,
@@ -16,11 +16,11 @@ const useVideoStore = create<UserStoreType>((set) => ({
     shareScreen: false,
     haveMedia: false, // is there a localStream, has getUserMedia been run
   },
-  setVideoData(userData: VideoCallDataStoreType) {
+  setCallState(userData: VideoCallDataStoreType) {
     set((state) => {
       return { ...state, userData };
     });
   },
 }));
 
-export default useVideoStore;
+export default useCallStore;
