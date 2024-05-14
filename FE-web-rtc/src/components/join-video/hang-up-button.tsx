@@ -7,12 +7,15 @@ export default function HangupButton() {
     setCallState({ ...callState, current: "complete" });
   };
 
-  if (callState.current === " complete") {
+  if (callState.current === "complete") {
     return <></>;
   }
 
   return (
-    <button className="bg-red-700 p-3 rounded-3xl" onClick={hangupCall}>
+    <button
+      className="bg-rose-600 px-3 py-2 rounded-lg text-white"
+      onClick={hangupCall}
+    >
       {" "}
       Hang Up{" "}
     </button>

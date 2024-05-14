@@ -10,6 +10,8 @@ import CallInfo from "../../components/join-video/call-info";
 import ChatWindow from "../../components/join-video/chat-window";
 import useVideoStore from "@/stores/video-call-store";
 import ActionButtons from "@/components/join-video/action-buttons";
+import useStreamStore from "@/stores/stream-store";
+import createPeerConnection from "@/helpers/create-peer-connection";
 
 export default function VideoStream() {
   const searchParams = useSearchParams();
@@ -20,6 +22,7 @@ export default function VideoStream() {
     useState<GetValidateDataTokenType>();
   const token = searchParams.get("token");
   const { callState, setCallState } = useVideoStore();
+  const { stream, setStream } = useStreamStore();
 
   const fetchDecodedToken = async () => {
     if (token) {
@@ -34,6 +37,27 @@ export default function VideoStream() {
       }
     }
   };
+  console.log(stream);
+
+  useEffect(() => {
+    const fetchMedia = async () => {
+      const constraints = {
+        video: true,
+        audio: false,
+      };
+      try {
+        const stream: MediaStream = await navigator.mediaDevices.getUserMedia(
+          constraints
+        );
+        setStream("localStream", stream);
+        const { peerConnection, remoteStream } = await createPeerConnection();
+        setStream("remote1", remoteStream, peerConnection);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    fetchMedia();
+  }, []);
 
   useEffect(() => {
     if (isWindow) {

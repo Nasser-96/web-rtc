@@ -16,7 +16,6 @@ import { SocketModule } from './socket/socket.module';
     SocketModule,
     JwtModule.register({
       secret: process.env.JSON_TOKEN_KEY,
-      signOptions: { expiresIn: '1000s' },
     }),
   ],
   controllers: [AppController],

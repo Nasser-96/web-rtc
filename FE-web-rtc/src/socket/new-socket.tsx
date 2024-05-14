@@ -16,7 +16,7 @@ const useNewSocket = (url: string = "") => {
 
   useEffect(() => {
     setSocket(
-      io(`https://192.168.8.133:9000/${url}`, {
+      io(`https://localhost:9000/${url}`, {
         auth: { token: userData.token },
         reconnection: true,
         autoConnect: true,

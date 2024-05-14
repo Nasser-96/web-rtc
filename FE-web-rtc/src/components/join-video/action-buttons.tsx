@@ -6,6 +6,9 @@ import HangupButton from "./hang-up-button";
 import AudioButton from "./audio-button/audio-button";
 import VideoButton from "./video-button/video-button";
 import ActionButton from "../shared/action-button";
+import { CgScreen } from "react-icons/cg";
+import { IoPeople } from "react-icons/io5";
+import { BsChatFill } from "react-icons/bs";
 
 interface ActionButtonsProps {}
 export default function ActionButtons({}: ActionButtonsProps) {
@@ -20,15 +23,19 @@ export default function ActionButtons({}: ActionButtonsProps) {
       if (callState.current === "idle") {
         timer = setTimeout(() => {
           if (menuButtons.current) {
-            // menuButtons.current.classList.add("hidden");
+            menuButtons.current.classList.add("hidden");
           }
         }, 4000);
       }
     };
     if (isWindow) {
       window.addEventListener("mousemove", () => {
-        if (menuButtons.current && menuButtons.current.classList) {
-          // menuButtons.current.classList.remove("hidden");
+        if (
+          menuButtons.current &&
+          menuButtons.current.classList &&
+          menuButtons.current.classList.contains("hidden")
+        ) {
+          menuButtons.current.classList.remove("hidden");
           setTimer();
         } else {
           clearTimeout(timer);
@@ -72,15 +79,15 @@ export default function ActionButtons({}: ActionButtonsProps) {
       </div>
 
       <div className="text-center flex gap-4">
-        <ActionButton className="text-white">Participants</ActionButton>
+        <ActionButton text="Participants" icon={<IoPeople size={30} />} />
         <div className="block">
           <div className="">
             {/* <i className="fa fa-comment" onClick={openCloseChat}></i>
                         <div className="btn-text" onClick={openCloseChat}>Chat</div> */}
           </div>
         </div>
-        <ActionButton className="text-white">Share Screen</ActionButton>
-        <ActionButton className="text-white">Chat</ActionButton>
+        <ActionButton text="Share Screen" icon={<CgScreen size={30} />} />
+        <ActionButton icon={<BsChatFill size={30} />} text="Chat" />
       </div>
 
       <div className="flex items-center justify-center text-end">

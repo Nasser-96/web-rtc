@@ -120,12 +120,12 @@ export default function Call() {
     }
   };
 
-  const fetchUserMedia = async (isAudio = false): Promise<MediaStream> => {
+  const fetchUserMedia = async (): Promise<MediaStream> => {
     return new Promise(async (resolve, reject) => {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
           video: true,
-          audio: isAudio,
+          audio: true,
         });
         if (localVideoRef.current) {
           localVideoRef.current.srcObject = stream;
@@ -233,6 +233,7 @@ export default function Call() {
             autoPlay
             playsInline
             ref={localVideoRef}
+            muted
           />
           <video
             className="w-full bg-slate-800 rounded-md"

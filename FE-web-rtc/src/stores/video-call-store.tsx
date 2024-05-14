@@ -1,12 +1,12 @@
 import { VideoCallDataStoreType } from "@/types&enums/types";
 import { create } from "zustand";
 
-export type UserStoreType = {
+export type VideoStoreType = {
   callState: VideoCallDataStoreType;
   setCallState: (data: VideoCallDataStoreType) => void;
 };
 
-const useCallStore = create<UserStoreType>((set) => ({
+const useCallStore = create<VideoStoreType>((set) => ({
   callState: {
     current: "idle", // negotiating, progress, complete
     video: false,
@@ -18,7 +18,7 @@ const useCallStore = create<UserStoreType>((set) => ({
   },
   setCallState(userData: VideoCallDataStoreType) {
     set((state) => {
-      return { ...state, userData };
+      return { ...state, callState: userData };
     });
   },
 }));
