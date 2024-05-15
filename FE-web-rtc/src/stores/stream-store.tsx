@@ -1,7 +1,7 @@
 import { VideoCallDataStoreType } from "@/types&enums/types";
 import { create } from "zustand";
 
-type StreamType = {
+export type StreamStateStoreType = {
   [who: string]: {
     stream: MediaStream;
     peerConnection?: RTCPeerConnection | undefined;
@@ -9,7 +9,7 @@ type StreamType = {
 };
 
 export type StreamStoreType = {
-  stream: StreamType;
+  stream: StreamStateStoreType;
   setStream: (
     who: string,
     data: MediaStream,
@@ -18,7 +18,7 @@ export type StreamStoreType = {
 };
 
 const useStreamStore = create<StreamStoreType>((set) => ({
-  stream: {} as StreamType,
+  stream: {} as StreamStateStoreType,
   setStream(
     who: string,
     mediaData: MediaStream,

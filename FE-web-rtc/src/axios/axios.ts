@@ -1,5 +1,6 @@
 import axios from "axios";
 import { AxiosMethods } from "../types&enums/enums";
+import GetBackendUrl from "@/helpers/backend-url";
 
 const axiosObject = axios.create();
 
@@ -14,7 +15,7 @@ export const makeRequest = async (req: MakeRequest) => {
   const { url, method, data, params } = req;
 
   return axiosObject({
-    url: "https://localhost:9000/" + url,
+    url: GetBackendUrl() + url,
     method,
     data,
     params,

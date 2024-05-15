@@ -1,4 +1,6 @@
 import { Socket } from "socket.io-client";
+import { AudioVideoStatusEnum } from "./enums";
+import { RefObject } from "react";
 
 export interface Prefs {
   token: string;
@@ -52,10 +54,21 @@ export type GetValidateDataTokenType = {
 
 export type VideoCallDataStoreType = {
   current: string;
-  video: boolean;
-  audio: boolean;
+  video: AudioVideoStatusEnum;
+  audio: AudioVideoStatusEnum;
   audioDevice: string;
   videoDevice: string;
   shareScreen: boolean;
   haveMedia: boolean;
 };
+
+export type GetDevicesHelperType = {
+  videoDevices: MediaDeviceInfo[];
+  audioOutputDevices: MediaDeviceInfo[];
+  audioInputDevices: MediaDeviceInfo[];
+  defaultDevice: MediaDeviceInfo;
+};
+
+export interface HTMLVideoElementWithSinkId extends HTMLVideoElement {
+  setSinkId?(sinkId: string): Promise<void>;
+}

@@ -16,6 +16,17 @@ export type OfferType = {
   answererIceCandidates: RTCIceCandidate[];
 };
 
+export type OfferTypeJoinVideo = {
+  uniqueId: string;
+  offer: RTCSessionDescriptionInit;
+  professionalFullName: string[];
+  clientName: string;
+  appointmentDate: string;
+  offerIceCandidates: RTCIceCandidate[];
+  answer: any;
+  answererIceCandidates: RTCIceCandidate[];
+};
+
 export type IceCandidateType = {
   iceCandidate: RTCIceCandidate;
   iceUserName: string;
@@ -24,4 +35,10 @@ export type IceCandidateType = {
 
 export type ValidateLinkType = {
   token: string;
+};
+
+export type AppointmentType = {
+  professionalFullName: string;
+  appointmentDate: number;
+  uuid: string;
 };

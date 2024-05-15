@@ -11,3 +11,10 @@ export enum MicTextEnum {
   MUTE = "Mute",
   UNMUTE = "Unmute",
 }
+
+export enum AudioVideoStatusEnum {
+  OFF = "off",
+  ENABLED = "enabled",
+  DISABLED = "disabled",
+  COMPLETE = "complete",
+}

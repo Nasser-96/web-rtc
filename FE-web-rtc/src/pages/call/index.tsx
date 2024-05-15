@@ -1,5 +1,5 @@
 import useNewSocket from "@/socket/new-socket";
-import { FormEvent, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import useWindowIsLoaded from "@/hooks/useIsWindowLoaded";
 import useUserStore from "@/stores/user-store";
 import { OfferType } from "@/types&enums/types";

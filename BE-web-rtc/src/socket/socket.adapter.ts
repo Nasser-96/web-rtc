@@ -16,6 +16,9 @@ export class SocketIOAdapter extends IoAdapter {
 
     const jwtService = this.app.get(JwtService);
     this.server.of('/').use(createTokenMiddleware(jwtService, this.logger));
+    this.server
+      .of('/join-video')
+      .use(createTokenMiddleware(jwtService, this.logger));
     return this.server;
   }
 }

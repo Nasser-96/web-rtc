@@ -1,7 +1,7 @@
 import useWindowIsLoaded from "@/hooks/useIsWindowLoaded";
 import useCallStore from "@/stores/video-call-store";
 import { MicTextEnum } from "@/types&enums/enums";
-import { useEffect, useRef, useState } from "react";
+import { RefObject, useEffect, useRef, useState } from "react";
 import HangupButton from "./hang-up-button";
 import AudioButton from "./audio-button/audio-button";
 import VideoButton from "./video-button/video-button";
@@ -9,13 +9,16 @@ import ActionButton from "../shared/action-button";
 import { CgScreen } from "react-icons/cg";
 import { IoPeople } from "react-icons/io5";
 import { BsChatFill } from "react-icons/bs";
+import { RiArrowUpSFill } from "react-icons/ri";
+import { HTMLVideoElementWithSinkId } from "@/types&enums/types";
 
-interface ActionButtonsProps {}
-export default function ActionButtons({}: ActionButtonsProps) {
+interface ActionButtonsProps {
+  ownFeedRef: RefObject<HTMLVideoElement>;
+}
+export default function ActionButtons({ ownFeedRef }: ActionButtonsProps) {
   const { callState } = useCallStore();
   const menuButtons = useRef<HTMLDivElement>(null);
   const { isWindow } = useWindowIsLoaded();
-  const [micText, setMicText] = useState<MicTextEnum>();
   let timer: NodeJS.Timeout;
 
   useEffect(() => {
@@ -56,16 +59,6 @@ export default function ActionButtons({}: ActionButtonsProps) {
     };
   }, []);
 
-  useEffect(() => {
-    if (callState.current === "idle") {
-      setMicText(MicTextEnum.JOIN_AUDIO);
-    } else if (callState.audio) {
-      setMicText(MicTextEnum.MUTE);
-    } else {
-      setMicText(MicTextEnum.UNMUTE);
-    }
-  }, [callState.audio, callState.current]);
-
   return (
     <div
       id="menu-buttons"
@@ -74,17 +67,16 @@ export default function ActionButtons({}: ActionButtonsProps) {
     >
       {/* <i className="fa fa-microphone" style="font-size:48px;color:red"></i> */}
       <div className="flex gap-4">
-        <AudioButton />
-        <VideoButton />
+        <AudioButton ownFeedRef={ownFeedRef} />
+        <VideoButton ownFeedRef={ownFeedRef} />
       </div>
 
       <div className="text-center flex gap-4">
-        <ActionButton text="Participants" icon={<IoPeople size={30} />} />
-        <div className="block">
-          <div className="">
-            {/* <i className="fa fa-comment" onClick={openCloseChat}></i>
-                        <div className="btn-text" onClick={openCloseChat}>Chat</div> */}
-          </div>
+        <div className="relative ">
+          <button className="absolute w-fit right-0 hover:bg-gray-700">
+            <RiArrowUpSFill size={30} className="text-white" />
+          </button>
+          <ActionButton text="Participants" icon={<IoPeople size={30} />} />
         </div>
         <ActionButton text="Share Screen" icon={<CgScreen size={30} />} />
         <ActionButton icon={<BsChatFill size={30} />} text="Chat" />

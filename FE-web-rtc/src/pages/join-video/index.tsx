@@ -12,8 +12,10 @@ import useVideoStore from "@/stores/video-call-store";
 import ActionButtons from "@/components/join-video/action-buttons";
 import useStreamStore from "@/stores/stream-store";
 import createPeerConnection from "@/helpers/create-peer-connection";
+import useNewSocket from "@/socket/new-socket";
 
 export default function VideoStream() {
+  const { socket } = useNewSocket("join-video");
   const searchParams = useSearchParams();
   const { isWindow } = useWindowIsLoaded();
   const largeFeedRef = useRef<HTMLVideoElement>(null);
@@ -37,7 +39,6 @@ export default function VideoStream() {
       }
     }
   };
-  console.log(stream);
 
   useEffect(() => {
     const fetchMedia = async () => {
@@ -49,6 +50,7 @@ export default function VideoStream() {
         const stream: MediaStream = await navigator.mediaDevices.getUserMedia(
           constraints
         );
+        setCallState({ ...callState, haveMedia: true });
         setStream("localStream", stream);
         const { peerConnection, remoteStream } = await createPeerConnection();
         setStream("remote1", remoteStream, peerConnection);
@@ -89,7 +91,7 @@ export default function VideoStream() {
         )}
         {/* <ChatWindow /> */}
         <div className="absolute bottom-0 w-full bg-gray-800 px-4">
-          <ActionButtons />
+          <ActionButtons ownFeedRef={ownFeedRef} />
         </div>
       </div>
     </div>

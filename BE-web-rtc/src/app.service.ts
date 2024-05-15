@@ -3,18 +3,18 @@ import ReturnResponse from './helper/returnResponse';
 import { PrismaService } from './prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import FrontEndUrl from './helper/front-end-url';
-import { ValidateLinkType } from './types&enums/types';
+import { AppointmentType, ValidateLinkType } from './types&enums/types';
 import { AppGateway } from './socket/socket.gateway';
+import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class AppService {
+  public professionalAppointments: AppointmentType[] = [];
   constructor(
     private readonly prismaService: PrismaService,
     private jwtService: JwtService,
     private readonly eventsGateway: AppGateway,
   ) {}
-
-  private linkSecret = 'djgbosubauldsnlfnadogubeuigs';
 
   getHello(): string {
     return 'Hello World!';
@@ -26,12 +26,16 @@ export class AppService {
   }
 
   async getUserLink() {
-    const appData = {
+    const uuid = uuidv4();
+
+    const appointmentData = {
       professionalFullName: 'Mark John Doe',
       appointmentDate: Date.now() + 1000000,
+      uuid,
     };
-    const linkToken = this.jwtService.sign(appData, {
-      secret: this.linkSecret,
+    this.professionalAppointments.push(appointmentData);
+    const linkToken = this.jwtService.sign(appointmentData, {
+      secret: process.env.JSON_TOKEN_KEY,
     });
     return ReturnResponse({
       link: `${FrontEndUrl()}/join-video?token=${linkToken}`,
@@ -41,8 +45,10 @@ export class AppService {
   async validateLink(data: ValidateLinkType) {
     try {
       const decodedData = this.jwtService.verify(data.token, {
-        secret: this.linkSecret,
+        secret: process.env.JSON_TOKEN_KEY,
       });
+
+      console.log(this.professionalAppointments);
 
       return ReturnResponse(decodedData);
     } catch (error) {

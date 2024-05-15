@@ -1,3 +1,4 @@
+import { AudioVideoStatusEnum } from "@/types&enums/enums";
 import { VideoCallDataStoreType } from "@/types&enums/types";
 import { create } from "zustand";
 
@@ -9,16 +10,16 @@ export type VideoStoreType = {
 const useCallStore = create<VideoStoreType>((set) => ({
   callState: {
     current: "idle", // negotiating, progress, complete
-    video: false,
-    audio: false,
+    video: AudioVideoStatusEnum.OFF,
+    audio: AudioVideoStatusEnum.OFF,
     audioDevice: "default", // Chosen audio device
     videoDevice: "default", // Chosen video device
     shareScreen: false,
     haveMedia: false, // is there a localStream, has getUserMedia been run
   },
-  setCallState(userData: VideoCallDataStoreType) {
+  setCallState(callStateData: VideoCallDataStoreType) {
     set((state) => {
-      return { ...state, callState: userData };
+      return { ...state, callState: callStateData };
     });
   },
 }));

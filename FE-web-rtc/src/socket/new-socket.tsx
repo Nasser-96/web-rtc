@@ -2,6 +2,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import io, { Socket } from "socket.io-client";
 import useUserStore from "../stores/user-store";
+import GetBackendUrl from "@/helpers/backend-url";
 
 export interface SocketStateType {
   socket: Socket | null;
@@ -16,7 +17,7 @@ const useNewSocket = (url: string = "") => {
 
   useEffect(() => {
     setSocket(
-      io(`https://localhost:9000/${url}`, {
+      io(GetBackendUrl() + url, {
         auth: { token: userData.token },
         reconnection: true,
         autoConnect: true,

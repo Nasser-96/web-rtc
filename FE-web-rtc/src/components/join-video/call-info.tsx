@@ -14,10 +14,10 @@ export default function CallInfo({ appointmentData }: CallInfoProps) {
   useEffect(() => {
     const timeInterval = setInterval(() => {
       setMomentText(moment(appointmentData.appointmentDate).fromNow());
-      console.log("Updating time");
+      // console.log("Updating time");
     }, 5000);
     return () => {
-      console.log("Clearing");
+      // console.log("Clearing");
       clearInterval(timeInterval);
     };
   }, []);

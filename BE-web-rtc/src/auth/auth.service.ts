@@ -64,7 +64,7 @@ export class AuthService {
         username: username,
         id: id,
       },
-      { expiresIn: '1000s', secret: process.env.JSON_TOKEN_KEY },
+      { secret: process.env.JSON_TOKEN_KEY },
     );
   }
 
