@@ -9,7 +9,7 @@ export type StreamStateStoreType = {
 };
 
 export type StreamStoreType = {
-  stream: StreamStateStoreType;
+  streams: StreamStateStoreType;
   setStream: (
     who: string,
     data: MediaStream,
@@ -18,7 +18,7 @@ export type StreamStoreType = {
 };
 
 const useStreamStore = create<StreamStoreType>((set) => ({
-  stream: {} as StreamStateStoreType,
+  streams: {} as StreamStateStoreType,
   setStream(
     who: string,
     mediaData: MediaStream,
@@ -27,8 +27,8 @@ const useStreamStore = create<StreamStoreType>((set) => ({
     set((state) => {
       return {
         ...state,
-        stream: {
-          ...state.stream,
+        streams: {
+          ...state.streams,
           [who]: { stream: mediaData, peerConnection: peerData },
         },
       };

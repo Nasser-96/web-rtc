@@ -6,6 +6,7 @@ import { ValidationError } from 'class-validator';
 import { SocketIOAdapter } from './socket/socket.adapter';
 import * as fs from 'fs';
 import { HttpsOptions } from '@nestjs/common/interfaces/external/https-options.interface';
+import { JoinVideoIOAdapter } from './socket/join-video/join-video.adapter';
 
 async function bootstrap() {
   const httpsOptions: HttpsOptions = {
@@ -37,7 +38,9 @@ async function bootstrap() {
   );
 
   const socketAdapter = new SocketIOAdapter(app);
+  const joinVideoIOAdapter = new JoinVideoIOAdapter(app);
   app.useWebSocketAdapter(socketAdapter);
+  app.useWebSocketAdapter(joinVideoIOAdapter);
 
   await app.listen(9000);
 }

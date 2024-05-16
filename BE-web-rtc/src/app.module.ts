@@ -7,7 +7,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AppGateway } from './socket/socket.gateway';
 import { SocketModule } from './socket/socket.module';
-import { JoinVideoGateway } from './socket/socket-join-video.gateway';
+import { JoinVideoGateway } from './socket/join-video/join-video.gateway';
 
 @Module({
   imports: [

@@ -18,3 +18,8 @@ export enum AudioVideoStatusEnum {
   DISABLED = "disabled",
   COMPLETE = "complete",
 }
+
+export enum RoleStateEnum {
+  ANSWERER = "answerer",
+  OFFERER = "offerer",
+}

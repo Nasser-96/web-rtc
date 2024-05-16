@@ -17,13 +17,15 @@ interface AudioButtonProps {
 
 export default function AudioButton({ ownFeedRef }: AudioButtonProps) {
   const { callState, setCallState } = useCallStore();
-  const { stream, setStream } = useStreamStore();
+  const { streams, setStream } = useStreamStore();
   const [micText, setMicText] = useState<MicTextEnum>();
   const [caretOpen, setCaretOpen] = useState<boolean>(false);
   const [audioDeviceList, setAudioDeviceList] = useState<MediaDeviceInfo[]>([]);
   const audioDropDownRef = useRef<HTMLDivElement>(null);
 
   const changeAudioDevice = async (device: MediaDeviceInfo) => {
+    console.log(device);
+
     if (device.kind === "audiooutput") {
       if (ownFeedRef.current && ownFeedRef.current.setSinkId) {
         await ownFeedRef.current.setSinkId(device.deviceId);
@@ -51,7 +53,7 @@ export default function AudioButton({ ownFeedRef }: AudioButtonProps) {
       if (ownFeedRef.current) {
         ownFeedRef.current.srcObject = newStream;
       }
-      setStream("localStream", newStream, stream.localStream.peerConnection);
+      setStream("localStream", newStream, streams.localStream.peerConnection);
       const tracks = newStream.getAudioTracks();
     }
   };
@@ -60,20 +62,20 @@ export default function AudioButton({ ownFeedRef }: AudioButtonProps) {
     if (ownFeedRef.current) {
       if (callState.audio === AudioVideoStatusEnum.ENABLED) {
         setCallState({ ...callState, audio: AudioVideoStatusEnum.DISABLED });
-        const tracks = stream.localStream.stream.getAudioTracks();
+        const tracks = streams.localStream.stream.getAudioTracks();
         tracks.forEach((track) => {
           track.enabled = false;
         });
       } else if (callState.audio === AudioVideoStatusEnum.DISABLED) {
         setCallState({ ...callState, audio: AudioVideoStatusEnum.ENABLED });
-        const tracks = stream.localStream.stream.getAudioTracks();
+        const tracks = streams.localStream.stream.getAudioTracks();
         tracks.forEach((track) => {
           track.enabled = true;
         });
       } else {
         const devices = await getDevices();
         changeAudioDevice(devices.defaultDevice);
-        startAudioStream(stream);
+        startAudioStream(streams);
       }
     }
   };

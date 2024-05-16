@@ -16,7 +16,7 @@ interface VideoButtonProps {
 
 export default function VideoButton({ ownFeedRef }: VideoButtonProps) {
   const { callState, setCallState } = useCallStore();
-  const { stream, setStream } = useStreamStore();
+  const { streams, setStream } = useStreamStore();
   const [pendingUpdate, setPendingUpdate] = useState<boolean>(false);
   const [caretOpen, setCaretOpen] = useState<boolean>(false);
   const videoDropDownRef = useRef<HTMLDivElement>(null);
@@ -26,19 +26,19 @@ export default function VideoButton({ ownFeedRef }: VideoButtonProps) {
     if (ownFeedRef.current) {
       if (callState.video === AudioVideoStatusEnum.ENABLED) {
         setCallState({ ...callState, video: AudioVideoStatusEnum.DISABLED });
-        const tracks = stream.localStream.stream.getVideoTracks();
+        const tracks = streams.localStream.stream.getVideoTracks();
         tracks.forEach((track) => {
           track.enabled = false;
         });
       } else if (callState.video === AudioVideoStatusEnum.DISABLED) {
         setCallState({ ...callState, video: AudioVideoStatusEnum.ENABLED });
-        const tracks = stream.localStream.stream.getVideoTracks();
+        const tracks = streams.localStream.stream.getVideoTracks();
         tracks.forEach((track) => {
           track.enabled = true;
         });
       } else if (callState.haveMedia) {
-        ownFeedRef.current.srcObject = stream.localStream.stream;
-        startLocalVideoStream(stream, callState, setCallState);
+        ownFeedRef.current.srcObject = streams.localStream.stream;
+        startLocalVideoStream(streams, callState, setCallState);
       } else {
         setPendingUpdate(true);
       }
@@ -65,15 +65,15 @@ export default function VideoButton({ ownFeedRef }: VideoButtonProps) {
     if (ownFeedRef.current) {
       ownFeedRef.current.srcObject = newStream;
     }
-    setStream("localStream", newStream, stream.localStream.peerConnection);
+    setStream("localStream", newStream, streams.localStream.peerConnection);
     const tracks = newStream.getVideoTracks();
   };
 
   useEffect(() => {
     if (pendingUpdate && callState.haveMedia && ownFeedRef.current) {
       setPendingUpdate(false);
-      ownFeedRef.current.srcObject = stream.localStream.stream;
-      startLocalVideoStream(stream, callState, setCallState);
+      ownFeedRef.current.srcObject = streams.localStream.stream;
+      startLocalVideoStream(streams, callState, setCallState);
     }
   }, [pendingUpdate, callState.haveMedia]);
 

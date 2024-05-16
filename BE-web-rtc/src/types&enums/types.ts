@@ -5,7 +5,18 @@ export type AuthPayloadType = {
   user_id: string;
 };
 
+export type JoinVideoAuth = {
+  fullName?: string;
+  proId?: string;
+  professionalsFullName?: string;
+  appointmentDate?: number;
+  uuid?: string;
+  clientName?: string;
+};
+
 export type SocketWithAuth = Socket & AuthPayloadType;
+
+export type JoinVideoAuthWithSocket = JoinVideoAuth & Socket;
 
 export type OfferType = {
   offererUserName: string;
@@ -17,14 +28,17 @@ export type OfferType = {
 };
 
 export type OfferTypeJoinVideo = {
-  uniqueId: string;
-  offer: RTCSessionDescriptionInit;
-  professionalFullName: string[];
-  clientName: string;
-  appointmentDate: string;
-  offerIceCandidates: RTCIceCandidate[];
-  answer: any;
-  answererIceCandidates: RTCIceCandidate[];
+  [uuid: string]: {
+    uniqueId: string;
+    offer: RTCSessionDescriptionInit;
+    professionalsFullName: string;
+    clientName: string;
+    appointmentDate: string;
+    offerIceCandidates: RTCIceCandidate[];
+    answer: any;
+    answererIceCandidates: RTCIceCandidate[];
+    appointmentData: AppointmentType;
+  };
 };
 
 export type IceCandidateType = {
@@ -38,7 +52,14 @@ export type ValidateLinkType = {
 };
 
 export type AppointmentType = {
-  professionalFullName: string;
+  professionalsFullName: string;
   appointmentDate: number;
   uuid: string;
+  clientName: string;
+  waiting?: boolean;
+};
+
+export type JoinVideoNewOfferType = {
+  offer: RTCSessionDescriptionInit;
+  appointmentData: AppointmentType;
 };

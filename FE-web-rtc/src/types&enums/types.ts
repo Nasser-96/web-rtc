@@ -1,5 +1,5 @@
 import { Socket } from "socket.io-client";
-import { AudioVideoStatusEnum } from "./enums";
+import { AudioVideoStatusEnum, RoleStateEnum } from "./enums";
 import { RefObject } from "react";
 
 export interface Prefs {
@@ -49,7 +49,12 @@ export type OfferType = {
 
 export type GetValidateDataTokenType = {
   professionalFullName: string;
-  appointmentDate: number;
+  appointmentDate: string;
+  uuid: string;
+  id?: string;
+  username?: string;
+  clientName: string;
+  waiting?: boolean;
 };
 
 export type VideoCallDataStoreType = {
@@ -60,6 +65,9 @@ export type VideoCallDataStoreType = {
   videoDevice: string;
   shareScreen: boolean;
   haveMedia: boolean;
+  haveCreatedOffer: boolean;
+  offer: RTCSessionDescriptionInit | null;
+  myRole: RoleStateEnum | "";
 };
 
 export type GetDevicesHelperType = {
@@ -72,3 +80,15 @@ export type GetDevicesHelperType = {
 export interface HTMLVideoElementWithSinkId extends HTMLVideoElement {
   setSinkId?(sinkId: string): Promise<void>;
 }
+
+export type OfferTypeJoinVideo = {
+  uniqueId: string;
+  offer: RTCSessionDescriptionInit;
+  professionalsFullName: string;
+  clientName: string;
+  appointmentDate: string;
+  offerIceCandidates: RTCIceCandidate[];
+  answer: any;
+  answererIceCandidates: RTCIceCandidate[];
+  appointmentData: GetValidateDataTokenType;
+};

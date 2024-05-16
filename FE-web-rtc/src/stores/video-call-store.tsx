@@ -16,6 +16,9 @@ const useCallStore = create<VideoStoreType>((set) => ({
     videoDevice: "default", // Chosen video device
     shareScreen: false,
     haveMedia: false, // is there a localStream, has getUserMedia been run
+    haveCreatedOffer: false,
+    offer: null,
+    myRole: "",
   },
   setCallState(callStateData: VideoCallDataStoreType) {
     set((state) => {

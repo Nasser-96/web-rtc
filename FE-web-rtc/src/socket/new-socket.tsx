@@ -9,7 +9,7 @@ export interface SocketStateType {
   isConnected: boolean;
 }
 
-const useNewSocket = (url: string = "") => {
+const useNewSocket = (url: string = "", token?: string) => {
   const [socket, setSocket] = useState<Socket | null>();
   const [isConnected, setIsConnected] = useState<boolean>(false);
   const router = useRouter();
@@ -18,7 +18,7 @@ const useNewSocket = (url: string = "") => {
   useEffect(() => {
     setSocket(
       io(GetBackendUrl() + url, {
-        auth: { token: userData.token },
+        auth: { token: token ? token : userData.token },
         reconnection: true,
         autoConnect: true,
         reconnectionAttempts: 4,

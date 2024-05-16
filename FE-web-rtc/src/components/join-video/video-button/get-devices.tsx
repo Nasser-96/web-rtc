@@ -14,9 +14,11 @@ export const getDevices = async () => {
     const audioInputDevices: MediaDeviceInfo[] = devices.filter((device) => {
       return device.kind === "audioinput";
     });
+
     const defaultDevice = audioInputDevices.filter(
       (device) => device.deviceId === "default"
     )[0];
+
     resolve({
       audioInputDevices,
       audioOutputDevices,

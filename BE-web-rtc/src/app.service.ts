@@ -9,7 +9,26 @@ import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class AppService {
-  public professionalAppointments: AppointmentType[] = [];
+  public professionalAppointments: AppointmentType[] = [
+    {
+      professionalsFullName: 'nasser',
+      appointmentDate: Date.now() + 500000,
+      uuid: '1',
+      clientName: 'Jim Jones',
+    },
+    {
+      professionalsFullName: 'nasser',
+      appointmentDate: Date.now() - 2000000,
+      uuid: '2', // uuid:'u'uidv4(),
+      clientName: 'Akash Patel',
+    },
+    {
+      professionalsFullName: 'nasser',
+      appointmentDate: Date.now() + 10000000,
+      uuid: '3', //uuid:'u'uidv4(),
+      clientName: 'Mike Williams',
+    },
+  ];
   constructor(
     private readonly prismaService: PrismaService,
     private jwtService: JwtService,
@@ -25,14 +44,13 @@ export class AppService {
     return ReturnResponse(users);
   }
 
-  async getUserLink() {
-    const uuid = uuidv4();
+  async getUserLink(token: string) {
+    const decodedToken = this.jwtService.verify(token, {
+      secret: process.env.JSON_TOKEN_KEY,
+    });
 
-    const appointmentData = {
-      professionalFullName: 'Mark John Doe',
-      appointmentDate: Date.now() + 1000000,
-      uuid,
-    };
+    const appointmentData = this.professionalAppointments[0];
+
     this.professionalAppointments.push(appointmentData);
     const linkToken = this.jwtService.sign(appointmentData, {
       secret: process.env.JSON_TOKEN_KEY,
@@ -48,8 +66,6 @@ export class AppService {
         secret: process.env.JSON_TOKEN_KEY,
       });
 
-      console.log(this.professionalAppointments);
-
       return ReturnResponse(decodedData);
     } catch (error) {
       throw new HttpException(
@@ -57,6 +73,24 @@ export class AppService {
         HttpStatus.METHOD_NOT_ALLOWED,
       );
     }
+  }
+
+  getProLink(token: string) {
+    const decodedData = this.jwtService.verify(token, {
+      secret: process.env.JSON_TOKEN_KEY,
+    });
+
+    const userData = {
+      fullName: decodedData?.username,
+      proId: decodedData?.id,
+    };
+    const linkToken = this.jwtService.sign(userData, {
+      secret: process.env.JSON_TOKEN_KEY,
+    });
+
+    return ReturnResponse({
+      link: `${FrontEndUrl()}/dashboard?token=${linkToken}`,
+    });
   }
 
   socket() {

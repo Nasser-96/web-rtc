@@ -18,10 +18,15 @@ import { AudioVideoStatusEnum } from "@/types&enums/enums";
 
 interface VideoStreamProps {
   token: string;
+  client: string;
+  uuid: string;
 }
 
-export default function VideoStream({ token }: VideoStreamProps) {
-  const searchParams = useSearchParams();
+export default function JoinVideoPro({
+  token,
+  client,
+  uuid,
+}: VideoStreamProps) {
   const { isWindow } = useWindowIsLoaded();
   const largeFeedRef = useRef<HTMLVideoElement>(null);
   const ownFeedRef = useRef<HTMLVideoElement>(null);
@@ -67,31 +72,6 @@ export default function VideoStream({ token }: VideoStreamProps) {
   }, []);
 
   useEffect(() => {
-    const createOfferAsync = async () => {
-      for (const stream in streams) {
-        if (stream !== "localStream") {
-          try {
-            const pc = streams[stream].peerConnection;
-            const offer = await pc?.createOffer();
-            socket?.emit("newOffer", { offer, appointmentData });
-          } catch (error) {
-            console.log(error);
-          }
-          setCallState({ ...callState, haveCreatedOffer: true });
-        }
-      }
-    };
-
-    if (
-      callState.audio === AudioVideoStatusEnum.ENABLED &&
-      callState.video === AudioVideoStatusEnum.ENABLED &&
-      !callState.haveCreatedOffer
-    ) {
-      createOfferAsync();
-    }
-  }, [callState.audio, callState.video, callState.haveCreatedOffer]);
-
-  useEffect(() => {
     if (isWindow) {
       fetchDecodedToken();
     }
@@ -114,10 +94,15 @@ export default function VideoStream({ token }: VideoStreamProps) {
           controls
           playsInline
         />
-        {appointmentData?.professionalFullName ? (
-          <CallInfo appointmentData={appointmentData} />
-        ) : (
-          <></>
+        {appointmentData && (
+          <div className="absolute top-1/2 left-[40%] border border-slate-400 bg-slate-800 p-2 text-3xl">
+            <h1 className="text-white">
+              {appointmentData.professionalFullName} has been notified.
+            </h1>
+            <h1 className="text-white mt-2">
+              {/* Your Appointment is {momentText}. */}
+            </h1>
+          </div>
         )}
         {/* <ChatWindow /> */}
         <div className="absolute bottom-0 w-full bg-gray-800 px-4">
@@ -130,11 +115,15 @@ export default function VideoStream({ token }: VideoStreamProps) {
 
 export async function getServerSideProps(context: any) {
   const { query } = context;
-  const token = query.token; // Access the query parameter
+  const token = query.token;
+  const client = query.client;
+  const uuid = query.uuid;
 
   return {
     props: {
       token,
+      client,
+      uuid,
     },
   };
 }
