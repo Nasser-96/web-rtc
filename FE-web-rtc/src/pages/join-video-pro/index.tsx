@@ -15,6 +15,7 @@ import createPeerConnection from "@/helpers/create-peer-connection";
 import useNewSocket from "@/socket/new-socket";
 import useCallStore from "@/stores/video-call-store";
 import { AudioVideoStatusEnum } from "@/types&enums/enums";
+import { Socket } from "socket.io-client";
 
 interface VideoStreamProps {
   token: string;
@@ -30,11 +31,14 @@ export default function JoinVideoPro({
   const { isWindow } = useWindowIsLoaded();
   const largeFeedRef = useRef<HTMLVideoElement>(null);
   const ownFeedRef = useRef<HTMLVideoElement>(null);
+  const socketRef = useRef<Socket | null | undefined>(null);
   const [appointmentData, setAppointmentData] =
     useState<GetValidateDataTokenType>();
+  const [haveGottenIce, setHaveGottenIce] = useState<boolean>(false);
   const { socket } = useNewSocket("join-video", token);
   const { callState, setCallState } = useVideoStore();
   const { streams, setStream } = useStreamStore();
+  const uuidRef = useRef<string | null>(null);
 
   const fetchDecodedToken = async () => {
     if (token) {
@@ -50,6 +54,14 @@ export default function JoinVideoPro({
     }
   };
 
+  const addIce = (iceCandidate: RTCIceCandidate) => {
+    socketRef.current?.emit("iceToServer", {
+      iceCandidate,
+      who: "professional",
+      uuid: uuid,
+    });
+  };
+
   useEffect(() => {
     const fetchMedia = async () => {
       const constraints = {
@@ -62,8 +74,13 @@ export default function JoinVideoPro({
         );
         setCallState({ ...callState, haveMedia: true });
         setStream("localStream", stream);
-        const { peerConnection, remoteStream } = await createPeerConnection();
+        const { peerConnection, remoteStream } = await createPeerConnection(
+          addIce
+        );
         setStream("remote1", remoteStream, peerConnection);
+        if (largeFeedRef.current) {
+          largeFeedRef.current.srcObject = remoteStream;
+        }
       } catch (error) {
         console.log(error);
       }
@@ -76,6 +93,109 @@ export default function JoinVideoPro({
       fetchDecodedToken();
     }
   }, [isWindow, token]);
+
+  useEffect(() => {
+    const setAsyncOffer = async () => {
+      for (const stream in streams) {
+        if (stream !== "localStream") {
+          const pc = streams[stream].peerConnection;
+          if (callState.offer) {
+            await pc?.setRemoteDescription(callState.offer);
+            console.log(pc?.signalingState);
+          }
+        }
+      }
+    };
+
+    if (callState.offer && streams.remote1 && streams.remote1.peerConnection) {
+      setAsyncOffer();
+    }
+  }, [callState.offer, streams.remote1]);
+
+  useEffect(() => {
+    const createAnswerAsync = async () => {
+      for (const stream in streams) {
+        if (stream !== "localStream") {
+          const pc = streams[stream].peerConnection;
+
+          if (pc?.signalingState === "have-remote-offer") {
+            const answer = await pc?.createAnswer();
+            await pc?.setLocalDescription(answer);
+            if (answer) {
+              console.log("answer", answer);
+
+              setCallState({
+                ...callState,
+                haveCreatedAnswer: true,
+                answer: answer,
+              });
+              socket?.emit("newAnswer", { answer, uuid });
+            }
+          }
+        }
+      }
+    };
+
+    if (
+      callState.audio === AudioVideoStatusEnum.ENABLED &&
+      callState.video === AudioVideoStatusEnum.ENABLED &&
+      !callState.haveCreatedOffer
+    ) {
+      createAnswerAsync();
+    }
+  }, [callState.audio, callState.video, callState.haveCreatedAnswer]);
+
+  useEffect(() => {
+    socketRef.current = socket;
+
+    const addIceCandidate = (data: RTCIceCandidate) => {
+      for (const stream in streams) {
+        if (stream !== "localStream") {
+          const pc = streams[stream].peerConnection;
+          pc?.addIceCandidate(data);
+          console.log("Added an IceCandidate to existing page presence");
+        }
+      }
+    };
+    if (socket) {
+      socket?.off("iceToClient");
+    }
+
+    socket?.on("iceToClient", (data: RTCIceCandidate) => {
+      addIceCandidate(data);
+    });
+
+    return () => {
+      socket?.off("iceToClient");
+    };
+  }, [socket, streams]);
+
+  useEffect(() => {
+    const getIceAsync = async () => {
+      const iceCandidates: RTCIceCandidate[] = await socket?.emitWithAck(
+        "getIce",
+        {
+          uuid,
+          who: "professional",
+        }
+      );
+      console.log(iceCandidates);
+
+      iceCandidates.forEach((ice) => {
+        for (const stream in streams) {
+          if (stream !== "localStream") {
+            const pc = streams[stream].peerConnection;
+            pc?.addIceCandidate(ice);
+            console.log("============== Added IceCandidate!!!!!");
+          }
+        }
+      });
+    };
+    if (streams.remote1 && !haveGottenIce) {
+      setHaveGottenIce(true);
+      getIceAsync();
+    }
+  }, [streams, socket]);
 
   return (
     <div dir="ltr" className="main-video-page">
@@ -94,19 +214,19 @@ export default function JoinVideoPro({
           controls
           playsInline
         />
-        {appointmentData && (
-          <div className="absolute top-1/2 left-[40%] border border-slate-400 bg-slate-800 p-2 text-3xl">
-            <h1 className="text-white">
-              {appointmentData.professionalFullName} has been notified.
-            </h1>
-            <h1 className="text-white mt-2">
-              {/* Your Appointment is {momentText}. */}
-            </h1>
-          </div>
-        )}
+        {appointmentData &&
+          (callState.audio === AudioVideoStatusEnum.OFF ||
+            callState.video === AudioVideoStatusEnum.OFF) && (
+            <div className="absolute top-1/2 left-[40%] border border-slate-400 bg-slate-800 p-2 text-3xl">
+              <h1 className="text-white">{client} is in the waiting room .</h1>
+              <h1 className="text-white mt-2">
+                Call will start when video and audio are enabled
+              </h1>
+            </div>
+          )}
         {/* <ChatWindow /> */}
         <div className="absolute bottom-0 w-full bg-gray-800 px-4">
-          <ActionButtons ownFeedRef={ownFeedRef} />
+          <ActionButtons largeFeedRef={largeFeedRef} ownFeedRef={ownFeedRef} />
         </div>
       </div>
     </div>

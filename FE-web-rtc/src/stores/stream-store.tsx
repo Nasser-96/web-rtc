@@ -4,7 +4,7 @@ import { create } from "zustand";
 export type StreamStateStoreType = {
   [who: string]: {
     stream: MediaStream;
-    peerConnection?: RTCPeerConnection | undefined;
+    peerConnection?: RTCPeerConnection | null;
   };
 };
 

@@ -53,8 +53,26 @@ export default function AudioButton({ ownFeedRef }: AudioButtonProps) {
       if (ownFeedRef.current) {
         ownFeedRef.current.srcObject = newStream;
       }
-      setStream("localStream", newStream, streams.localStream.peerConnection);
-      const tracks = newStream.getAudioTracks();
+      setStream(
+        "localStream",
+        newStream,
+        streams.localStream.peerConnection as RTCPeerConnection
+      );
+      const [audioTrack] = newStream.getAudioTracks();
+
+      for (const stream in streams) {
+        if (stream !== "localStream") {
+          const senders = streams[stream].peerConnection?.getSenders();
+          const sender = senders?.find((s) => {
+            if (s.track) {
+              return s.track.kind === audioTrack.kind;
+            } else {
+              return false;
+            }
+          });
+          sender?.replaceTrack(audioTrack);
+        }
+      }
     }
   };
 

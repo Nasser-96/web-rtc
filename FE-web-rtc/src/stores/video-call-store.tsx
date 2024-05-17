@@ -19,6 +19,8 @@ const useCallStore = create<VideoStoreType>((set) => ({
     haveCreatedOffer: false,
     offer: null,
     myRole: "",
+    answer: null,
+    haveCreatedAnswer: false,
   },
   setCallState(callStateData: VideoCallDataStoreType) {
     set((state) => {

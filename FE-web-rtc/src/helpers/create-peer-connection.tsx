@@ -1,6 +1,6 @@
 import peerConfiguration from "./stun-servers";
 
-const createPeerConnection = async () => {
+const createPeerConnection = async (addIce: (ice: RTCIceCandidate) => void) => {
   return await new Promise<{
     peerConnection: RTCPeerConnection;
     remoteStream: MediaStream;
@@ -12,10 +12,22 @@ const createPeerConnection = async () => {
       console.log("Signaling State Change");
       console.log(e);
     });
-    peerConnection.addEventListener("icecandidate", (e) => {
-      console.log("Found ice candidate");
-      if (e.candidate) {
+
+    peerConnection.addEventListener(
+      "icecandidate",
+      (e: RTCPeerConnectionIceEvent) => {
+        console.log("Found ice candidate");
+
+        if (e.candidate) {
+          addIce(e.candidate);
+        }
       }
+    );
+    peerConnection.addEventListener("track", (e: RTCTrackEvent) => {
+      e.streams[0].getTracks().forEach((track) => {
+        remoteStream.addTrack(track);
+        console.log("Fingered Crossed.......");
+      });
     });
     resolve({ peerConnection: peerConnection, remoteStream: remoteStream });
   });

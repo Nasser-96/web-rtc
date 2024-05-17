@@ -14,8 +14,12 @@ import { HTMLVideoElementWithSinkId } from "@/types&enums/types";
 
 interface ActionButtonsProps {
   ownFeedRef: RefObject<HTMLVideoElement>;
+  largeFeedRef: RefObject<HTMLVideoElement>;
 }
-export default function ActionButtons({ ownFeedRef }: ActionButtonsProps) {
+export default function ActionButtons({
+  ownFeedRef,
+  largeFeedRef,
+}: ActionButtonsProps) {
   const { callState } = useCallStore();
   const menuButtons = useRef<HTMLDivElement>(null);
   const { isWindow } = useWindowIsLoaded();
@@ -83,7 +87,7 @@ export default function ActionButtons({ ownFeedRef }: ActionButtonsProps) {
       </div>
 
       <div className="flex items-center justify-center text-end">
-        <HangupButton />
+        <HangupButton ownFeedRef={ownFeedRef} largeFeedRef={largeFeedRef} />
       </div>
     </div>
   );

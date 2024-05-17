@@ -48,7 +48,7 @@ export type OfferType = {
 };
 
 export type GetValidateDataTokenType = {
-  professionalFullName: string;
+  professionalsFullName: string;
   appointmentDate: string;
   uuid: string;
   id?: string;
@@ -66,7 +66,9 @@ export type VideoCallDataStoreType = {
   shareScreen: boolean;
   haveMedia: boolean;
   haveCreatedOffer: boolean;
+  haveCreatedAnswer: boolean;
   offer: RTCSessionDescriptionInit | null;
+  answer: RTCSessionDescriptionInit | null;
   myRole: RoleStateEnum | "";
 };
 

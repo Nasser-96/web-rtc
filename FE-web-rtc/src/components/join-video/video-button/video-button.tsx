@@ -65,8 +65,25 @@ export default function VideoButton({ ownFeedRef }: VideoButtonProps) {
     if (ownFeedRef.current) {
       ownFeedRef.current.srcObject = newStream;
     }
-    setStream("localStream", newStream, streams.localStream.peerConnection);
-    const tracks = newStream.getVideoTracks();
+    setStream(
+      "localStream",
+      newStream,
+      streams.localStream.peerConnection as RTCPeerConnection
+    );
+    const [videoTrack] = newStream.getVideoTracks();
+    for (const stream in streams) {
+      if (stream !== "localStream") {
+        const senders = streams[stream].peerConnection?.getSenders();
+        const sender = senders?.find((s) => {
+          if (s.track) {
+            return s.track.kind === videoTrack.kind;
+          } else {
+            return false;
+          }
+        });
+        sender?.replaceTrack(videoTrack);
+      }
+    }
   };
 
   useEffect(() => {

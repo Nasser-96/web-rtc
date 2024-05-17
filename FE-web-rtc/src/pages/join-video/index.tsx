@@ -14,7 +14,8 @@ import useStreamStore from "@/stores/stream-store";
 import createPeerConnection from "@/helpers/create-peer-connection";
 import useNewSocket from "@/socket/new-socket";
 import useCallStore from "@/stores/video-call-store";
-import { AudioVideoStatusEnum } from "@/types&enums/enums";
+import { AudioVideoStatusEnum, RoleStateEnum } from "@/types&enums/enums";
+import { Socket } from "socket.io-client";
 
 interface VideoStreamProps {
   token: string;
@@ -25,6 +26,9 @@ export default function VideoStream({ token }: VideoStreamProps) {
   const { isWindow } = useWindowIsLoaded();
   const largeFeedRef = useRef<HTMLVideoElement>(null);
   const ownFeedRef = useRef<HTMLVideoElement>(null);
+  const uuidRef = useRef<string | null>(null);
+  const [showCallInfo, setCallInfo] = useState<boolean>(true);
+  const socketRef = useRef<Socket | null | undefined>(null);
   const [appointmentData, setAppointmentData] =
     useState<GetValidateDataTokenType>();
   const { socket } = useNewSocket("join-video", token);
@@ -37,12 +41,21 @@ export default function VideoStream({ token }: VideoStreamProps) {
         const decodedToken: ReturnResponseType<GetValidateDataTokenType> =
           await getDecodeTokenService(token);
         setAppointmentData(decodedToken.response);
+        uuidRef.current = decodedToken.response.uuid;
       } catch (error: any) {
         if (error?.response?.data?.error_msg === "Token Expired") {
           console.log("Token Expired");
         }
       }
     }
+  };
+
+  const addIce = (iceCandidate: RTCIceCandidate) => {
+    socketRef?.current?.emit("iceToServer", {
+      iceCandidate,
+      who: "client",
+      uuid: uuidRef.current,
+    });
   };
 
   useEffect(() => {
@@ -57,8 +70,13 @@ export default function VideoStream({ token }: VideoStreamProps) {
         );
         setCallState({ ...callState, haveMedia: true });
         setStream("localStream", stream);
-        const { peerConnection, remoteStream } = await createPeerConnection();
+        const { peerConnection, remoteStream } = await createPeerConnection(
+          addIce
+        );
         setStream("remote1", remoteStream, peerConnection);
+        if (largeFeedRef.current) {
+          largeFeedRef.current.srcObject = remoteStream;
+        }
       } catch (error) {
         console.log(error);
       }
@@ -73,6 +91,8 @@ export default function VideoStream({ token }: VideoStreamProps) {
           try {
             const pc = streams[stream].peerConnection;
             const offer = await pc?.createOffer();
+            pc?.setLocalDescription(offer);
+
             socket?.emit("newOffer", { offer, appointmentData });
           } catch (error) {
             console.log(error);
@@ -97,6 +117,61 @@ export default function VideoStream({ token }: VideoStreamProps) {
     }
   }, [isWindow, token]);
 
+  useEffect(() => {
+    socketRef.current = socket;
+    const addIceCandidate = (data: RTCIceCandidate) => {
+      for (const stream in streams) {
+        if (stream !== "localStream") {
+          const pc = streams[stream].peerConnection;
+          pc?.addIceCandidate(data);
+          console.log("Added an IceCandidate to existing page presence");
+          setCallInfo(false);
+        }
+      }
+    };
+
+    if (socket) {
+      socket?.off("iceToClient");
+      socket?.off("answerToClient");
+    }
+
+    socket?.on("answerToClient", (data: any) => {
+      if (data) {
+        setCallState({
+          ...callState,
+          answer: data,
+          myRole: RoleStateEnum.OFFERER,
+        });
+      }
+    });
+    socket?.on("iceToClient", (data: RTCIceCandidate) => {
+      addIceCandidate(data);
+    });
+
+    return () => {
+      socket?.off("iceToClient");
+      socket?.off("answerToClient");
+    };
+  }, [socket, streams]);
+
+  useEffect(() => {
+    const asyncAddAnswer = async () => {
+      for (const stream in streams) {
+        if (stream !== "localStream") {
+          const pc = streams[stream].peerConnection;
+          if (callState.answer) {
+            console.log("pc?.signalingState222", pc?.signalingState);
+            await pc?.setRemoteDescription(callState.answer);
+            console.log("Answer added!");
+          }
+        }
+      }
+    };
+    if (callState.answer) {
+      asyncAddAnswer();
+    }
+  }, [callState.answer]);
+
   return (
     <div dir="ltr" className="main-video-page">
       <div className="relative overflow-hidden h-screen w-screen">
@@ -114,14 +189,12 @@ export default function VideoStream({ token }: VideoStreamProps) {
           controls
           playsInline
         />
-        {appointmentData?.professionalFullName ? (
+        {showCallInfo && appointmentData && (
           <CallInfo appointmentData={appointmentData} />
-        ) : (
-          <></>
         )}
         {/* <ChatWindow /> */}
         <div className="absolute bottom-0 w-full bg-gray-800 px-4">
-          <ActionButtons ownFeedRef={ownFeedRef} />
+          <ActionButtons ownFeedRef={ownFeedRef} largeFeedRef={largeFeedRef} />
         </div>
       </div>
     </div>

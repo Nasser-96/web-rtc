@@ -97,4 +97,14 @@ export class AuthService {
       );
     }
   }
+
+  async updateUserName(token: string, newName: string) {
+    const decodedData = this.jwtService.verify(token, {
+      secret: process.env.JSON_TOKEN_KEY,
+    });
+    await this.prismaSirvce.user.update({
+      where: { id: decodedData.id },
+      data: { username: newName },
+    });
+  }
 }

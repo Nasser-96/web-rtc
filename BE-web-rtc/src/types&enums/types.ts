@@ -63,3 +63,19 @@ export type JoinVideoNewOfferType = {
   offer: RTCSessionDescriptionInit;
   appointmentData: AppointmentType;
 };
+
+export type HandleNewAnswerPayloadType = {
+  answer: RTCSessionDescriptionInit;
+  uuid: string;
+};
+
+export type HandleIcePayloadType = {
+  iceCandidate: RTCIceCandidate;
+  who: 'professional' | 'client';
+  uuid: string;
+};
+
+export type HandleGetIcePayloadType = {
+  who: 'professional' | 'client';
+  uuid: string;
+};
