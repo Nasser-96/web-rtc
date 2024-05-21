@@ -38,9 +38,9 @@ async function bootstrap() {
   );
 
   const socketAdapter = new SocketIOAdapter(app);
-  const joinVideoIOAdapter = new JoinVideoIOAdapter(app);
+  // const joinVideoIOAdapter = new JoinVideoIOAdapter(app);
   app.useWebSocketAdapter(socketAdapter);
-  app.useWebSocketAdapter(joinVideoIOAdapter);
+  // app.useWebSocketAdapter(joinVideoIOAdapter);
 
   await app.listen(9000);
 }

@@ -8,6 +8,7 @@ import {
   SubscribeMessage,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
+import { CallStatusEnum } from 'src/types&enums/enum';
 import {
   IceCandidateType,
   OfferType,
@@ -65,6 +66,7 @@ export class AppGateway
       offer: offer,
       offererUserName: client.username,
       offerIceCandidates: [],
+      callStatus: CallStatusEnum.WAITING,
     });
     client.broadcast.emit('newOfferAwaiting', this.offers.slice(-1));
   }

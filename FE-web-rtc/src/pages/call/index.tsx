@@ -15,7 +15,7 @@ export default function Call() {
   const [didIOffer, setDidIOffer] = useState<boolean>(false);
   const [offersList, setOffersList] = useState<OfferType[]>([]);
   const [peerConnection, setPeerConnection] = useState<RTCPeerConnection>();
-  const peerConfig = {
+  const peerConfig: RTCConfiguration = {
     iceServers: [
       {
         urls: ["stun:stun.l.google.com:19302", "stun:stun1.l.google.com:19302"],
@@ -96,6 +96,7 @@ export default function Call() {
   const answerOffer = async (offer: OfferType) => {
     try {
       const UserMedia: MediaStream = await fetchUserMedia();
+      console.log(UserMedia);
       const answerPeerConnection = await createPeerConnection(
         UserMedia,
         false,

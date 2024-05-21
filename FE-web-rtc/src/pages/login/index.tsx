@@ -15,7 +15,7 @@ export default function Login() {
       const data: ReturnResponseType<{ user_token: string }> =
         await loginService({ username, password });
       setUserData({ token: data?.response?.user_token, username });
-      router.push("/call");
+      router.push("/call-demo");
     } catch (error) {
       console.log(error);
     }

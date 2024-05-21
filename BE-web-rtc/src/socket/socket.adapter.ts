@@ -17,7 +17,7 @@ export class SocketIOAdapter extends IoAdapter {
     const jwtService = this.app.get(JwtService);
     this.server.of('/').use(createTokenMiddleware(jwtService, this.logger));
     this.server
-      .of('/join-video')
+      .of('/call-demo')
       .use(createTokenMiddleware(jwtService, this.logger));
     return this.server;
   }
@@ -32,9 +32,9 @@ const createTokenMiddleware =
       const payload = jwtService.verify(token, {
         secret: process.env.JSON_TOKEN_KEY,
       });
-
       socket.user_id = payload.id;
       socket.username = payload.username;
+
       next();
     } catch (error) {
       console.log(error);

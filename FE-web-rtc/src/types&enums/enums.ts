@@ -23,3 +23,10 @@ export enum RoleStateEnum {
   ANSWERER = "answerer",
   OFFERER = "offerer",
 }
+
+export enum CallStatusEnum {
+  NONE = "",
+  WAITING = "waiting",
+  IN_CALL = "in_call",
+  COMPLETED = "completed",
+}

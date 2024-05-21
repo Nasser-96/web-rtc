@@ -1,6 +1,6 @@
 export default function GetBackendUrl() {
   const isLocalHost = true;
   if (isLocalHost) {
-    return "https://localhost:9000/";
+    return "https://192.168.8.133:9000/";
   }
 }

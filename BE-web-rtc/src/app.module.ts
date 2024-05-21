@@ -8,6 +8,7 @@ import { AppService } from './app.service';
 import { AppGateway } from './socket/socket.gateway';
 import { SocketModule } from './socket/socket.module';
 import { JoinVideoGateway } from './socket/join-video/join-video.gateway';
+import { CallDemoGateway } from './socket/call-demo/call-demo.gateway';
 
 @Module({
   imports: [
@@ -20,6 +21,6 @@ import { JoinVideoGateway } from './socket/join-video/join-video.gateway';
     }),
   ],
   controllers: [AppController],
-  providers: [AppService, AppGateway, JoinVideoGateway],
+  providers: [AppService, AppGateway, JoinVideoGateway, CallDemoGateway],
 })
 export class AppModule {}

@@ -1,5 +1,5 @@
 import { Socket } from "socket.io-client";
-import { AudioVideoStatusEnum, RoleStateEnum } from "./enums";
+import { AudioVideoStatusEnum, CallStatusEnum, RoleStateEnum } from "./enums";
 import { RefObject } from "react";
 
 export interface Prefs {
@@ -41,10 +41,27 @@ export type LocalStorageUserDataType = {
 export type OfferType = {
   offererUserName: string;
   offer: RTCSessionDescriptionInit;
+  offerConstraints?: MediaStreamConstraints;
+  answerConstraints?: MediaStreamConstraints;
   offerIceCandidates: RTCIceCandidate[];
   answererUserName: string;
   answer: any;
   answererIceCandidates: RTCIceCandidate[];
+  callStatus: CallStatusEnum;
+};
+
+export type OfferTypeDemo = {
+  offererUserName: string;
+  offer: RTCSessionDescriptionInit;
+  offerShareScreen?: RTCSessionDescriptionInit | undefined;
+  offerConstraints?: MediaStreamConstraints;
+  answerConstraints?: MediaStreamConstraints;
+  offerIceCandidates: RTCIceCandidate[];
+  answererUserName: string;
+  answer: RTCSessionDescriptionInit;
+  answerShareScreen: RTCSessionDescriptionInit;
+  answererIceCandidates: RTCIceCandidate[];
+  callStatus: CallStatusEnum;
 };
 
 export type GetValidateDataTokenType = {
@@ -93,4 +110,15 @@ export type OfferTypeJoinVideo = {
   answer: any;
   answererIceCandidates: RTCIceCandidate[];
   appointmentData: GetValidateDataTokenType;
+};
+
+export type CreatePeerConnectionType = {
+  mediaStream?: MediaStream;
+  didIOfferFun?: boolean;
+  offerObj?: OfferTypeDemo;
+  isShareScreen?: boolean;
+};
+
+export type FetchUserMediaType = {
+  stream: MediaStream | undefined;
 };

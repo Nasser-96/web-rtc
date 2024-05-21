@@ -7,12 +7,14 @@ import { RefObject, useEffect, useState } from "react";
 interface DropDownMenuProps {
   deviceList: MediaDeviceInfo[];
   isAudio?: boolean;
+  isDemo?: boolean;
   onClick: (value: any) => void;
 }
 
 export default function DropDownMenu({
-  deviceList,
+  deviceList = [],
   isAudio,
+  isDemo,
   onClick,
 }: DropDownMenuProps) {
   const [audioInput, setAudioInput] = useState<MediaDeviceInfo[]>([]);
@@ -35,7 +37,11 @@ export default function DropDownMenu({
   }, [deviceList]);
 
   return (
-    <div className="absolute bottom-full bg-slate-900 flex flex-col gap-2 w-fit p-2 flex-nowrap">
+    <div
+      className={`bottom-full bg-slate-900 flex flex-col gap-2 w-fit p-2 flex-nowrap ${
+        isDemo ? "" : "absolute"
+      }`}
+    >
       {isAudio ? (
         <>
           <p className="text-white">Input Devices</p>

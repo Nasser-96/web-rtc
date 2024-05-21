@@ -1,4 +1,5 @@
 import { Socket } from 'socket.io';
+import { CallStatusEnum } from './enum';
 
 export type AuthPayloadType = {
   username: string;
@@ -20,11 +21,31 @@ export type JoinVideoAuthWithSocket = JoinVideoAuth & Socket;
 
 export type OfferType = {
   offererUserName: string;
-  offer: RTCSessionDescriptionInit;
+  offer?: RTCSessionDescriptionInit;
+  offerShareScreen?: RTCSessionDescriptionInit | undefined;
+  offerConstraints?: MediaStreamConstraints;
+  answerConstraints?: MediaStreamConstraints;
   offerIceCandidates: RTCIceCandidate[];
   answererUserName: string;
-  answer: any;
+  answer?: RTCSessionDescriptionInit;
+  answerShareScreen?: RTCSessionDescriptionInit;
   answererIceCandidates: RTCIceCandidate[];
+  callStatus: CallStatusEnum;
+};
+export type OfferTypeDemo = {
+  offererUserName: string;
+  offer?: RTCSessionDescriptionInit;
+  offerShareScreen?: RTCSessionDescriptionInit | undefined;
+  offerConstraints?: MediaStreamConstraints;
+  answerConstraints?: MediaStreamConstraints;
+  offerIceCandidates: RTCIceCandidate[];
+  offerIceCandidatesShareScreen?: RTCIceCandidate[];
+  answererUserName: string;
+  answer?: RTCSessionDescriptionInit;
+  answerShareScreen?: RTCSessionDescriptionInit;
+  answererIceCandidates: RTCIceCandidate[];
+  answererIceCandidatesShareScreen?: RTCIceCandidate[];
+  callStatus: CallStatusEnum;
 };
 
 export type OfferTypeJoinVideo = {
@@ -78,4 +99,10 @@ export type HandleIcePayloadType = {
 export type HandleGetIcePayloadType = {
   who: 'professional' | 'client';
   uuid: string;
+};
+
+export type HandleNewOfferType = {
+  offer: RTCSessionDescriptionInit;
+  user: string;
+  offerConstraints?: MediaStreamConstraints;
 };
