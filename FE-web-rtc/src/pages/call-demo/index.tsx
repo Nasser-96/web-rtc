@@ -633,12 +633,12 @@ export default function Call() {
   }, [socket, peerConnection, peerConnectionShareScreen]);
 
   useEffect(() => {
-    const getDevicesAsync = async () => {
+    const getVideoDevicesAsync = async () => {
       const devices = await getDevices();
       setVideoDeviceList(devices.videoDevices);
     };
 
-    getDevicesAsync();
+    getVideoDevicesAsync();
   }, [localStream]);
 
   return (
@@ -695,7 +695,8 @@ export default function Call() {
                 );
               })}
             </div>
-            <div className="mt-5 flex gap-5">
+            <div className="mt-5 flex gap-5 items-center">
+              <p className="text-white">Video Devices</p>
               {videoDeviceList.map((device, index) => {
                 return (
                   <Button
