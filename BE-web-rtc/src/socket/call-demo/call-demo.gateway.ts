@@ -149,32 +149,27 @@ export class CallDemoGateway
     client: SocketWithAuth,
     { user, offer, offerConstraints }: HandleNewOfferType,
   ) {
-    const foundMatch = this.offersShareScreen.find(
-      (oldOffer) => oldOffer.answererUserName === user,
+    this.offersShareScreen = this.offersShareScreen.filter(
+      (oldOffer) => oldOffer.answererUserName !== user,
     );
 
-    if (foundMatch) {
-      foundMatch.offererUserName = client.username;
-      foundMatch.offerShareScreen = offer;
-      foundMatch.offerConstraints = offerConstraints;
-      foundMatch.callStatus = CallStatusEnum.WAITING;
-    } else {
-      this.offersShareScreen.push({
-        answer: null,
-        answererIceCandidates: [],
-        answererUserName: null,
-        offererUserName: client.username,
-        offerIceCandidates: [],
-        offerConstraints: offerConstraints,
-        callStatus: CallStatusEnum.WAITING,
-        offerShareScreen: offer,
-        answerConstraints: {},
-        answererIceCandidatesShareScreen: [],
-        answerShareScreen: undefined,
-        offer: undefined,
-        offerIceCandidatesShareScreen: [],
-      });
-    }
+    const tempOffer = {
+      answer: null,
+      answererIceCandidates: [],
+      answererUserName: null,
+      offererUserName: client.username,
+      offerIceCandidates: [],
+      offerConstraints: offerConstraints,
+      callStatus: CallStatusEnum.WAITING,
+      offerShareScreen: offer,
+      answerConstraints: {},
+      answererIceCandidatesShareScreen: [],
+      answerShareScreen: undefined,
+      offer: undefined,
+      offerIceCandidatesShareScreen: [],
+    };
+
+    this.offersShareScreen.push(tempOffer);
     const emitTo = this.connectedSockets.find(
       (socket) => socket.username === user,
     );
@@ -183,7 +178,7 @@ export class CallDemoGateway
       .to(emitTo.id)
       .emit(
         'newOfferAwaitingShareScreen',
-        this.offersShareScreen.slice(-1),
+        this.offersShareScreen,
         client.username,
       );
   }
@@ -234,8 +229,6 @@ export class CallDemoGateway
     iceCandidateObj: IceCandidateType,
   ) {
     const { didIOffer, iceCandidate, iceUserName } = iceCandidateObj;
-
-    console.log('PUSH', iceCandidateObj);
     if (didIOffer) {
       const offerInOffers = this.offersShareScreen.find((o) => {
         return o.offererUserName === iceUserName;
@@ -259,7 +252,6 @@ export class CallDemoGateway
       const offerInOffers = this.offersShareScreen.find((o) => {
         return o.answererUserName === iceUserName;
       });
-      console.log('PUSH1222', offerInOffers.answerConstraints);
       const socketToSendTo = this.connectedSockets.find(
         (s) => s.username === offerInOffers.offererUserName,
       );
@@ -300,7 +292,6 @@ export class CallDemoGateway
 
     // socket has a .to() which allow to emitting to a 'room'
     // every socket has it's own room
-    console.log(socketIdToAnswer);
     if (answerOffer.callStatus !== CallStatusEnum.IN_CALL) {
       this.server.to(socketIdToAnswer).emit('answerResponse', offerToUpdate);
     }
@@ -342,7 +333,6 @@ export class CallDemoGateway
         .to(socketIdToAnswer)
         .emit('answerResponseShareScreen', offerToUpdate);
     }
-    // console.log('offerToUpdate.offerIceCandidatesShareScreen', offerToUpdate);
 
     if (offerToUpdate.offerIceCandidatesShareScreen) {
       return offerToUpdate.offerIceCandidatesShareScreen;

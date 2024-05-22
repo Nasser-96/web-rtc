@@ -12,6 +12,7 @@ import { CallStatusEnum } from "@/types&enums/enums";
 import { getDevices } from "@/components/join-video/video-button/get-devices";
 import DropDownMenu from "@/components/join-video/drop-down-menu";
 import Button from "@/components/shared/button";
+import Toggle from "@/components/shared/toggle";
 
 export default function Call() {
   const { socket } = useNewSocket("call-demo");
@@ -25,6 +26,7 @@ export default function Call() {
   const [connectedUsers, setConnectedUsers] = useState<string[]>([]);
   const [callUser, setCallUser] = useState<string>("");
   const [remoteStream, setRemoteStream] = useState<MediaStream>();
+  const [shareStream, setShareStream] = useState<MediaStream | null>();
   const [offerState, setOfferState] = useState<OfferTypeDemo>();
   const [didIOffer, setDidIOffer] = useState<boolean>(false);
   const [isAnswerModalOpen, setIsAnswerModalOpen] = useState<boolean>(false);
@@ -43,8 +45,9 @@ export default function Call() {
   const [offersListShare, setOffersListShare] = useState<OfferTypeDemo[]>([]);
   const [peerConnection, setPeerConnection] = useState<RTCPeerConnection>();
   const [peerConnectionShareScreen, setPeerConnectionShareScreen] =
-    useState<RTCPeerConnection>();
+    useState<RTCPeerConnection | null>();
   const [videoDeviceList, setVideoDeviceList] = useState<MediaDeviceInfo[]>([]);
+  const iceCandidateBuffer: RTCIceCandidate[] = [];
   const peerConfig: RTCConfiguration = {
     iceServers: [
       {
@@ -83,13 +86,14 @@ export default function Call() {
     return new Promise(async (resolve, reject) => {
       const newPeer = new RTCPeerConnection(peerConfig);
       const theRemoteStream = new MediaStream();
-      setRemoteStream(theRemoteStream);
 
       if (isShareScreen) {
-        if (shareVideoRef.current) {
+        if (shareVideoRef.current && !didIOfferFun) {
           shareVideoRef.current.srcObject = theRemoteStream;
         }
+        setShareStream(theRemoteStream);
       } else {
+        setRemoteStream(theRemoteStream);
         if (remoteVideoRef.current) {
           remoteVideoRef.current.srcObject = theRemoteStream;
         }
@@ -131,7 +135,12 @@ export default function Call() {
         if (newPeer.signalingState === "stable") {
           try {
             if (isShareScreen && offerObj.offerShareScreen) {
-              await newPeer.setRemoteDescription(offerObj.offerShareScreen);
+              await newPeer.setRemoteDescription(
+                offerObj.offerShareScreen || offerObj.offer
+              );
+              setRemoteDescriptionAndAddBufferedCandidates(
+                offerObj.offerShareScreen || offerObj.offer
+              );
             } else {
               await newPeer.setRemoteDescription(offerObj.offer);
             }
@@ -182,6 +191,23 @@ export default function Call() {
         console.log(error);
       }
     }
+  };
+
+  const closeShareConnection = async () => {
+    return new Promise<void>((resolve, reject) => {
+      if (peerConnectionShareScreen) {
+        peerConnectionShareScreen.onicecandidate = null;
+        peerConnectionShareScreen.ontrack = null;
+        peerConnectionShareScreen.close();
+        setPeerConnectionShareScreen(null);
+        if (shareStream) {
+          shareStream.getTracks().forEach((track) => track.stop());
+          setShareStream(null);
+        }
+      }
+
+      resolve();
+    });
   };
 
   const fetchUserMediaWithOldData = async (
@@ -245,8 +271,23 @@ export default function Call() {
     }
   };
 
+  const setRemoteDescriptionAndAddBufferedCandidates = async (
+    description: RTCSessionDescriptionInit
+  ) => {
+    if (peerConnectionShareScreen) {
+      await peerConnectionShareScreen.setRemoteDescription(description);
+      while (iceCandidateBuffer.length > 0) {
+        const candidate = iceCandidateBuffer.shift();
+        if (candidate) {
+          await peerConnectionShareScreen.addIceCandidate(candidate);
+        }
+      }
+    }
+  };
+
   const answerOfferShareScreen = async (offer: OfferTypeDemo) => {
     try {
+      await closeShareConnection();
       let mediaStream;
       if (offer.answererUserName) {
       } else {
@@ -254,12 +295,6 @@ export default function Call() {
           const newMedia = await fetchDisplayMedia(true);
           mediaStream = newMedia;
         }
-      }
-      if (peerConnectionShareScreen) {
-        peerConnectionShareScreen.onicecandidate = null;
-        peerConnectionShareScreen.ontrack = null;
-        peerConnectionShareScreen.close();
-        setPeerConnectionShareScreen(undefined);
       }
       const answerPeerConnection = await createPeerConnection({
         mediaStream,
@@ -276,6 +311,7 @@ export default function Call() {
       } else {
         offer.answerConstraints = answerConstraints;
       }
+
       await answerPeerConnection.setLocalDescription(answer);
       const offerIceCandidates: RTCIceCandidate[] = await socket?.emitWithAck(
         "newAnswerShareScreen",
@@ -283,7 +319,9 @@ export default function Call() {
       );
 
       offerIceCandidates.forEach((candidate) => {
-        answerPeerConnection.addIceCandidate(candidate);
+        answerPeerConnection
+          .addIceCandidate(candidate)
+          .catch((err) => console.log("answerOfferShareScreen", err));
       });
     } catch (error) {
       console.log(error);
@@ -296,11 +334,20 @@ export default function Call() {
     return new Promise(async (resolve, reject) => {
       try {
         const constraints: MediaStreamConstraints = {
-          audio: isAnswer ? answerConstraints.audio : offerConstraints.audio,
-          video: isAnswer ? answerConstraints.video : offerConstraints.video,
+          audio: true,
+          video: true,
         };
 
         const stream = await navigator.mediaDevices.getUserMedia(constraints);
+
+        stream.getTracks().forEach((track) => {
+          if (!offerConstraints.audio && track.kind === "audio") {
+            track.enabled = false;
+          }
+          if (!offerConstraints.video && track.kind === "video") {
+            track.enabled = false;
+          }
+        });
 
         if (localVideoRef.current) {
           localVideoRef.current.srcObject = stream;
@@ -325,7 +372,7 @@ export default function Call() {
 
         if (shareVideoRef.current) {
           shareVideoRef.current.srcObject = stream;
-          setLocalStream(stream);
+          setShareStream(stream);
         }
         resolve(stream);
       } catch (error) {
@@ -369,7 +416,7 @@ export default function Call() {
       peerConnectionShareScreen &&
       peerConnectionShareScreen.signalingState !== "stable"
     ) {
-      await peerConnectionShareScreen?.setRemoteDescription(
+      await setRemoteDescriptionAndAddBufferedCandidates(
         offer.answerShareScreen
       );
     }
@@ -380,7 +427,16 @@ export default function Call() {
   };
 
   const addNewIceCandidateShareScreen = (iceCandidate: RTCIceCandidate) => {
-    peerConnectionShareScreen?.addIceCandidate(iceCandidate);
+    if (
+      peerConnectionShareScreen &&
+      peerConnectionShareScreen.remoteDescription
+    ) {
+      peerConnectionShareScreen
+        .addIceCandidate(iceCandidate)
+        .catch((err) => console.log("addNewIceCandidateShareScreen", err));
+    } else {
+      iceCandidateBuffer.push(iceCandidate);
+    }
   };
 
   const openAnswerModal = (offer: OfferTypeDemo) => {
@@ -401,6 +457,8 @@ export default function Call() {
   };
 
   const acceptShare = (offer: OfferTypeDemo) => {
+    console.log("offer", offer);
+
     answerOfferShareScreen(offer);
   };
 
@@ -475,13 +533,7 @@ export default function Call() {
     if (isWindow) {
       try {
         const displayMedia = await fetchDisplayMedia(false);
-        if (peerConnectionShareScreen) {
-          peerConnectionShareScreen.onicecandidate = null;
-          peerConnectionShareScreen.ontrack = null;
-          peerConnectionShareScreen.close();
-          setPeerConnectionShareScreen(undefined);
-        }
-
+        await closeShareConnection();
         const connection: RTCPeerConnection = await createPeerConnection({
           mediaStream: displayMedia,
           didIOfferFun: true,
@@ -526,15 +578,13 @@ export default function Call() {
     socket?.on("newOfferAwaiting", (offer: OfferTypeDemo[]) => {
       createOfferEls(offer);
     });
-    socket?.on("newOfferAwaitingShareScreen", (offer: OfferTypeDemo[]) => {
-      if (peerConnection) {
-        peerConnection.onicecandidate = null;
-        peerConnection.ontrack = null;
-        peerConnection.close();
-        setPeerConnectionShareScreen(undefined);
+    socket?.on(
+      "newOfferAwaitingShareScreen",
+      async (offer: OfferTypeDemo[]) => {
+        await closeShareConnection();
+        createOfferElsShareScreen(offer);
       }
-      createOfferElsShareScreen(offer);
-    });
+    );
     socket?.on("answerResponse", (offer: OfferTypeDemo) => {
       addAnswer(offer);
     });
@@ -593,7 +643,7 @@ export default function Call() {
 
   return (
     <>
-      <div className="flex items-center justify-center">
+      <div className="flex items-center justify-center w-full h-full">
         <div className="flex flex-col min-h-screen h-full pt-12 justify-start min-w-36 px-2 gap-4 border-r-2">
           {connectedUsers.map((user, index) => {
             return (
@@ -700,7 +750,9 @@ export default function Call() {
           closeModal={setIsOfferModalOpen}
           setConstraints={setTwoConstraints}
           acceptCall={confirmCall}
-          shareScreen={shareScreen}
+          shareScreen={async () => {
+            await shareScreen();
+          }}
         />
       )}
     </>
